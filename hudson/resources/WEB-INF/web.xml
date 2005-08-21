@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" version="2.4">
+  <display-name>Hudson</display-name>
+  <description>Build management system</description>
+
+  <servlet>
+    <servlet-name>Stapler</servlet-name>
+    <servlet-class>org.kohsuke.stapler.Stapler</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Stapler</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>dwr-invoker</servlet-name>
+    <display-name>DWR Servlet</display-name>
+    <description>Direct Web Remoter Servlet</description>
+    <servlet-class>uk.ltd.getahead.dwr.DWRServlet</servlet-class>
+    <init-param>
+       <param-name>debug</param-name>
+       <param-value>true</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>dwr-invoker</servlet-name>
+    <url-pattern>/dwr/*</url-pattern>
+  </servlet-mapping>
+
+  <listener>
+    <listener-class>hudson.WebAppMain</listener-class>
+  </listener>
+
+  <security-role>
+    <!-- admins can add/remove/configure projects -->
+    <role-name>admin</role-name>
+  </security-role>
+
+  <security-constraint>
+    <web-resource-collection>
+      <url-pattern>/loginEntry</url-pattern>
+      <!--http-method>GET</http-method-->
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>admin</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <form-login-config>
+      <form-login-page>/login</form-login-page>
+      <form-error-page>/loginError</form-error-page>
+    </form-login-config>
+  </login-config>
+
+
+  <!-- if specified, this value is used as the Hudson home directory -->
+  <env-entry>
+    <env-entry-name>HUDSON_HOME</env-entry-name>
+    <env-entry-value></env-entry-value>
+    <env-entry-type>java.lang.String</env-entry-type>
+  </env-entry>
+</web-app>

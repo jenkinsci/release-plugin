@@ -1,0 +1,7 @@
+<dwr>
+  <allow>
+    <create
+        creator="new"
+        javascript="Dt" class="java.util.Date"/>
+  </allow>
+</dwr>
