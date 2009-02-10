@@ -1,0 +1,26 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:p="/lib/hudson/project">
+   
+  <f:block>
+    <div style="padding-left: 2em">
+    
+      <br />
+    
+      <!-- Pre build steps -->
+      <label class="attach-previous">${%Before release build}</label>
+      <f:hetero-list name="preBuildSteps" hasHeader="true"
+                     descriptors="${h.getBuilderDescriptors(it)}"
+                     items="${instance.preBuildSteps}"
+                     addCaption="${%Add release step}"/>
+                     
+      <br />
+  
+      <!-- Post build steps -->
+      <label class="attach-previous">${%After release build}</label>
+      <f:hetero-list name="postBuildSteps" hasHeader="true"
+                     descriptors="${h.getBuilderDescriptors(it)}"
+                     items="${instance.postBuildSteps}"
+                     addCaption="${%Add release step}"/>
+    </div>
+  </f:block>
+  
+</j:jelly>

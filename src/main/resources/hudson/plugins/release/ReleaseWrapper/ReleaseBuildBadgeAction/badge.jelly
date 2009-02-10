@@ -1,0 +1,8 @@
+<!--
+  Displays the form to choose the tag name.
+
+  This belongs to a build view.
+-->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <img width="16" height="16" tooltip="Release ${it.releaseVersion}" alt="${it.releaseVersion}" src="${imagesURL}/16x16/package.gif"/>
+</j:jelly>
