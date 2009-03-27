@@ -7,9 +7,13 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildBadgeAction;
 import hudson.model.BuildListener;
+import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
+import hudson.model.Item;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.StringParameterValue;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -17,7 +21,6 @@ import hudson.tasks.Builder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,10 +41,6 @@ import org.kohsuke.stapler.StaplerResponse;
 public class ReleaseWrapper extends BuildWrapper {
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
-    
-    private transient boolean releaseBuild = false;
-    private transient String releaseVersion;
-    private transient String developmentVersion;
     
     /**
      * @stapler-constructor
@@ -82,36 +81,23 @@ public class ReleaseWrapper extends BuildWrapper {
         return new ReleaseAction(job);
     }
     
-    private void enableReleaseBuild() {
-        releaseBuild = true;
-    }
-    
     @Override
     public Environment setUp(AbstractBuild build, final Launcher launcher, BuildListener listener) throws IOException,
             InterruptedException {
-        synchronized (this) {
-            if (releaseBuild) {
-                releaseBuild = false;
-            } else {
-                return new Environment() { };
-            }
+
+        final ReleaseBuildBadgeAction releaseBuildBadge = build.getAction(ReleaseBuildBadgeAction.class);
+        
+        if (releaseBuildBadge == null) {
+        	return new Environment() { };
         }
-                
-        Map<String, String> properties = new HashMap<String, String>();
-        properties.put("RELEASE_VERSION", releaseVersion);
-        properties.put("DEVELOPMENT_VERSION", developmentVersion);
         
-        // add ReleaseBuildBadge to this build
-        build.addAction(new ReleaseBuildBadgeAction(releaseVersion));
-        
-        final WrappedBuild wrappedBuild = new WrappedBuild(build, properties);
-        
-        if (!executeBuildSteps(preBuildSteps, wrappedBuild, launcher, listener)) {
+        if (!executeBuildSteps(preBuildSteps, build, launcher, listener)) {
             throw new IOException("Could not execute pre-build steps");
         }
         
         // return environment
         return new Environment() {
+        	
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException,
                     InterruptedException {
@@ -120,9 +106,9 @@ public class ReleaseWrapper extends BuildWrapper {
                 build.keepLog();
                 
                 // set build description to indicate release
-                build.setDescription("Release # " + releaseVersion);
+                build.setDescription("Release # " + releaseBuildBadge.getReleaseVersion());
                 
-                return executeBuildSteps(postBuildSteps, wrappedBuild, launcher, listener);
+                return executeBuildSteps(postBuildSteps, build, launcher, listener);
             }
         };
     }
@@ -152,6 +138,15 @@ public class ReleaseWrapper extends BuildWrapper {
         
         return shouldContinue;
     }
+    
+	public static boolean hasReleasePermission(AbstractProject job) {
+		return job.hasPermission(Item.BUILD);
+	}
+
+	public static void checkReleasePermission(AbstractProject job) {
+		job.checkPermission(Item.BUILD);
+	}
+
 
     public Descriptor<BuildWrapper> getDescriptor() {
         return DESCRIPTOR;
@@ -208,7 +203,11 @@ public class ReleaseWrapper extends BuildWrapper {
          * {@inheritDoc}
          */
         public String getIconFileName() {
-            return "package.gif";
+        	if (ReleaseWrapper.hasReleasePermission(project)) {
+        		return "package.gif";
+        	}
+        	
+        	return null;
         }
 
         /**
@@ -258,19 +257,29 @@ public class ReleaseWrapper extends BuildWrapper {
         }
         
         public void doSubmit(StaplerRequest req, StaplerResponse resp) throws IOException {
+        	// verify permission
+        	ReleaseWrapper.checkReleasePermission(project);
+        	
             // bind development / release version
             req.bindParameters(this);
             
+            // create parameter list
+            List<ParameterValue> paramValues = new ArrayList<ParameterValue>();
+            
+            // add version if specified
+            if (releaseVersion != null && !"".equals(releaseVersion)) {
+            	paramValues.add(new StringParameterValue("RELEASE_VERSION", releaseVersion));
+            }
+            
+            if (developmentVersion != null && !"".equals(developmentVersion)) {
+            	paramValues.add(new StringParameterValue("DEVELOPMENT_VERSION", developmentVersion));
+            }
+            
             // schedule release build
-            synchronized (ReleaseWrapper.this) {
-                if (Hudson.getInstance().getQueue().add(project, 0)) {
-                    enableReleaseBuild();
-                    ReleaseWrapper.this.releaseVersion = releaseVersion;
-                    ReleaseWrapper.this.developmentVersion = developmentVersion;
-                    
-                    releaseVersion = null;
-                    developmentVersion = null;
-                }
+            if (!project.scheduleBuild(0, new Cause.UserCause(), 
+            		new ReleaseBuildBadgeAction(releaseVersion), 
+            		new ParametersAction(paramValues))) {
+            	// TODO redirect to error page?
             }
             
             // redirect to status page
