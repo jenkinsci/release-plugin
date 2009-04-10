@@ -9,10 +9,10 @@
     <l:main-panel>
         <f:form method="get" action="submit">
 	      <f:section title="Define release">
-	          <f:entry title="${%Release version}" help="${rootURL}/plugin/release/help-releaseVersion.html">
+	          <f:entry title="${%Release version}" help="/plugin/release/help-releaseVersion.html">
 	            <f:textbox name="releaseVersion" value="${it.releaseVersion}" />
 	          </f:entry>
-	          <f:entry title="${%Next development version}" help="${rootURL}/plugin/release/help-developmentVersion.html">
+	          <f:entry title="${%Next development version}" help="/plugin/release/help-developmentVersion.html">
 	            <f:textbox name="developmentVersion" value="${it.developmentVersion}" />
 	          </f:entry>
 	          <tr><td colspan="3"><f:submit value="${%Schedule Release Build}"/></td></tr>
