@@ -10,7 +10,7 @@
   <packaging>hpi</packaging>
   <name>Hudson Release Plugin</name>
   <version>1.2-SNAPSHOT</version>
-  <url>http://hudson.gotdns.com/wiki/display/HUDSON/Release+Plugin</url>
+  <url>http://wiki.hudson-ci.org/display/HUDSON/Release+Plugin</url>
   <developers>
   	<developer>
   		<id>petehayes</id>
