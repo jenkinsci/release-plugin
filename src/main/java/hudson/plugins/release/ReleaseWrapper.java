@@ -1,5 +1,6 @@
 package hudson.plugins.release;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
@@ -11,8 +12,10 @@ import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
+import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterValue;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
@@ -25,6 +28,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.servlet.ServletException;
+
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
@@ -35,9 +41,10 @@ import org.kohsuke.stapler.StaplerResponse;
  * any action as part of the special release build.
  *
  * @author Peter Hayes
- * @since 0.1
+ * @since 1.0
  */
 public class ReleaseWrapper extends BuildWrapper {
+	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
     
@@ -46,6 +53,14 @@ public class ReleaseWrapper extends BuildWrapper {
      */
     public ReleaseWrapper() {
     }
+    
+    public List<ParameterDefinition> getParameterDefinitions() {
+		return parameterDefinitions;
+	}
+    
+    public void setParameterDefinitions(List<ParameterDefinition> parameterDefinitions) {
+		this.parameterDefinitions = parameterDefinitions;
+	}
     
     /**
      * @return Returns the preBuildSteps.
@@ -104,9 +119,13 @@ public class ReleaseWrapper extends BuildWrapper {
                 // save build
                 build.keepLog();
                 
-                // set build description to indicate release
-                build.setDescription("Release # " + releaseBuildBadge.getReleaseVersion());
+                // only set description if we can derive version
+                if (releaseBuildBadge.getReleaseVersion() != null) {
                 
+	                // set build description to indicate release
+	                build.setDescription("Release # " + releaseBuildBadge.getReleaseVersion());
+                }
+	                
                 return executeBuildSteps(postBuildSteps, build, launcher, listener);
             }
         };
@@ -145,24 +164,10 @@ public class ReleaseWrapper extends BuildWrapper {
 	public static void checkReleasePermission(AbstractProject job) {
 		job.checkPermission(Item.BUILD);
 	}
-
-
-    public Descriptor<BuildWrapper> getDescriptor() {
-        return DESCRIPTOR;
-    }
-
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
     
+	@Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
         
-        /**
-         * 
-         */
-        public DescriptorImpl() {
-            super(ReleaseWrapper.class);
-            load();
-        }
-
         @Override
         public String getDisplayName() {
             return "Configure release build";
@@ -171,8 +176,9 @@ public class ReleaseWrapper extends BuildWrapper {
         @Override
         public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             ReleaseWrapper instance = new ReleaseWrapper();
-            instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", BuildStep.BUILDERS);
-            instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", BuildStep.BUILDERS);
+            instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
+            instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
+            instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
             return instance;
         }
         
@@ -185,10 +191,14 @@ public class ReleaseWrapper extends BuildWrapper {
     public class ReleaseAction implements Action {
         private AbstractProject project;
         private String releaseVersion;
-        private String developmentVersion;
+        private String developmentVersion;    
         
         public ReleaseAction(AbstractProject project) {
             this.project = project;
+        }
+        
+        public List<ParameterDefinition> getParameterDefinitions() {
+        	return parameterDefinitions;
         }
 
         /**
@@ -231,7 +241,7 @@ public class ReleaseWrapper extends BuildWrapper {
                 
                 ReleaseBuildBadgeAction badge = build.getAction(ReleaseBuildBadgeAction.class);
                 
-                if (badge != null) {
+                if (badge != null && badge.getReleaseVersion() != null) {
                     previousReleaseVersions.add(badge.getReleaseVersion());
                 }
             }
@@ -254,24 +264,75 @@ public class ReleaseWrapper extends BuildWrapper {
         public void setDevelopmentVersion(String developmentVersion) {
             this.developmentVersion = developmentVersion;
         }
+
+        /**
+         * Gets the {@link ParameterDefinition} of the given name, if any.
+         */
+        public ParameterDefinition getParameterDefinition(String name) {
+            for (ParameterDefinition pd : parameterDefinitions)
+                if (pd.getName().equals(name))
+                    return pd;
+            return null;
+        }
+
+        /*
+         * TODO Would be nice if this method was accessible from AbstractProject
+         */
+        private List<ParameterValue> getDefaultParametersValues() {
+            ParametersDefinitionProperty paramDefProp = (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
+            ArrayList<ParameterValue> defValues = new ArrayList<ParameterValue>();
+            
+            /*
+             * This check is made ONLY if someone will call this method even if isParametrized() is false.
+             */
+            if(paramDefProp == null)
+                return defValues;
+            
+            /* Scan for all parameter with an associated default values */
+            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions())
+            {
+               ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
+                
+                if(defaultValue != null)
+                    defValues.add(defaultValue);           
+            }
+            
+            return defValues;
+        }
         
-        public void doSubmit(StaplerRequest req, StaplerResponse resp) throws IOException {
+        public void doSubmit(StaplerRequest req, StaplerResponse resp) throws IOException, ServletException {
         	// verify permission
         	ReleaseWrapper.checkReleasePermission(project);
         	
             // bind development / release version
             req.bindParameters(this);
-            
+
             // create parameter list
-            List<ParameterValue> paramValues = new ArrayList<ParameterValue>();
+            List<ParameterValue> paramValues = getDefaultParametersValues();
             
-            // add version if specified
-            if (releaseVersion != null && !"".equals(releaseVersion)) {
-            	paramValues.add(new StringParameterValue("RELEASE_VERSION", releaseVersion));
-            }
-            
-            if (developmentVersion != null && !"".equals(developmentVersion)) {
-            	paramValues.add(new StringParameterValue("DEVELOPMENT_VERSION", developmentVersion));
+            if (!getParameterDefinitions().isEmpty()) {
+	            JSONObject formData = req.getSubmittedForm();
+	            
+	            JSONArray a = JSONArray.fromObject(formData.get("parameter"));
+	
+	            for (Object o : a) {
+	                JSONObject jo = (JSONObject) o;
+	                String name = jo.getString("name");
+	
+	                ParameterDefinition d = getParameterDefinition(name);
+	                if(d==null)
+	                    throw new IllegalArgumentException("No such parameter definition: " + name);
+	                paramValues.add(d.createValue(req, jo));
+	            }
+            } else {
+	            // add version if specified
+	            if (releaseVersion != null && !"".equals(releaseVersion)) {
+	            	paramValues.add(new StringParameterValue("RELEASE_VERSION", releaseVersion));
+	            }
+	            
+	            if (developmentVersion != null && !"".equals(developmentVersion)) {
+	            	paramValues.add(new StringParameterValue("DEVELOPMENT_VERSION", developmentVersion));
+	            }
             }
             
             // schedule release build

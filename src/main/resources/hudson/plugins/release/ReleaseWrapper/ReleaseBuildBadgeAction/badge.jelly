@@ -4,5 +4,11 @@
   This belongs to a build view.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <img width="16" height="16" tooltip="Release ${it.releaseVersion}" alt="${it.releaseVersion}" src="${imagesURL}/16x16/package.gif"/>
+    
+	<j:if test="${it.releaseVersion != null}">
+      <img width="16" height="16" tooltip="Release ${it.releaseVersion}" alt="${it.releaseVersion}" src="${imagesURL}/16x16/package.gif"/>
+    </j:if>
+    <j:if test="${it.releaseVersion == null}">
+      <img width="16" height="16" src="${imagesURL}/16x16/package.gif"/>
+    </j:if>
 </j:jelly>
