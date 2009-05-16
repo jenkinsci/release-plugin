@@ -9,7 +9,7 @@
     <l:main-panel>
         <f:form method="get" action="submit">
 	      <f:section title="Define release">
-	          <j:if test="${it.parameterDefinitions.isEmpty()}">
+	          <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
 	          	  Please configure your specific release parameters in the project config page as these
 	          	  hard coded parameters will be removed in a future release.
 		          <f:entry title="${%Release version}" help="/plugin/release/help-releaseVersion.html">
@@ -27,7 +27,7 @@
 		      </j:if>
 	          <tr><td colspan="3"><f:submit value="${%Schedule Release Build}"/></td></tr>
 	      </f:section>
-	      <j:if test="${it.parameterDefinitions.isEmpty()}">
+	      <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
 	        <f:section title="Previous release versions">
 	          <j:forEach var="t" items="${it.previousReleaseVersions}">
 	            <tr><td colspan="3">${t}</td></tr>

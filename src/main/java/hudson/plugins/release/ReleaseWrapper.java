@@ -269,6 +269,10 @@ public class ReleaseWrapper extends BuildWrapper {
          * Gets the {@link ParameterDefinition} of the given name, if any.
          */
         public ParameterDefinition getParameterDefinition(String name) {
+        	if (parameterDefinitions == null) {
+        		return null;
+        	}
+        	
             for (ParameterDefinition pd : parameterDefinitions)
                 if (pd.getName().equals(name))
                     return pd;
@@ -310,7 +314,7 @@ public class ReleaseWrapper extends BuildWrapper {
             // create parameter list
             List<ParameterValue> paramValues = getDefaultParametersValues();
             
-            if (!getParameterDefinitions().isEmpty()) {
+            if (getParameterDefinitions() != null && !getParameterDefinitions().isEmpty()) {
 	            JSONObject formData = req.getSubmittedForm();
 	            
 	            JSONArray a = JSONArray.fromObject(formData.get("parameter"));
