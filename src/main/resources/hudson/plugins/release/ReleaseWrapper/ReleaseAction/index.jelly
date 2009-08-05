@@ -7,7 +7,7 @@
 <l:layout>
     <st:include it="${it.project}" page="sidepanel.jelly" /> 
     <l:main-panel>
-        <f:form method="get" action="submit">
+        <f:form method="post" action="submit">
 	      <f:section title="Define release">
 	          <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
 	          	  Please configure your specific release parameters in the project config page as these
