@@ -2,6 +2,7 @@ package hudson.plugins.release;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -21,6 +22,7 @@ import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.VariableResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -44,6 +47,9 @@ import org.kohsuke.stapler.StaplerResponse;
  * @since 1.0
  */
 public class ReleaseWrapper extends BuildWrapper {
+	private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
+	
+	private String releaseVersionTemplate;
 	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
@@ -53,6 +59,14 @@ public class ReleaseWrapper extends BuildWrapper {
      */
     public ReleaseWrapper() {
     }
+    
+    public String getReleaseVersionTemplate() {
+		return releaseVersionTemplate;
+	}
+    
+    public void setReleaseVersionTemplate(String releaseVersionTemplate) {
+		this.releaseVersionTemplate = releaseVersionTemplate;
+	}
     
     public List<ParameterDefinition> getParameterDefinitions() {
 		return parameterDefinitions;
@@ -105,6 +119,23 @@ public class ReleaseWrapper extends BuildWrapper {
         	return new Environment() { };
         }
         
+        // Set the release version now by resolving build parameters against build and release version template
+        ParametersAction parametersAction = build.getAction(ParametersAction.class);
+        if (parametersAction != null) {
+	        // set up variable resolver from parameters action
+        	VariableResolver<String> resolver = parametersAction.createVariableResolver(build);
+	        
+        	// resolve template against resolver
+        	String releaseVersion = Util.replaceMacro(releaseVersionTemplate != null && !"".equals(releaseVersionTemplate) ? releaseVersionTemplate : DEFAULT_RELEASE_VERSION_TEMPLATE, resolver);
+	                	
+        	// if release version is same as original, then blank it out
+        	if (DEFAULT_RELEASE_VERSION_TEMPLATE.equals(releaseVersion)) {
+        		releaseVersion = null;
+        	}
+        	
+        	releaseBuildBadge.releaseVersion = releaseVersion;
+        }
+        
         if (!executeBuildSteps(preBuildSteps, build, launcher, listener)) {
             throw new IOException("Could not execute pre-build steps");
         }
@@ -123,7 +154,7 @@ public class ReleaseWrapper extends BuildWrapper {
                 if (releaseBuildBadge.getReleaseVersion() != null) {
                 
 	                // set build description to indicate release
-	                build.setDescription("Release # " + releaseBuildBadge.getReleaseVersion());
+	                build.setDescription(releaseBuildBadge.getReleaseVersion());
                 }
 	                
                 return executeBuildSteps(postBuildSteps, build, launcher, listener);
@@ -135,23 +166,25 @@ public class ReleaseWrapper extends BuildWrapper {
         boolean shouldContinue = true;
         
         // execute prebuild steps, stop processing if indicated
-        for (BuildStep buildStep : buildSteps) {
-            
-            if (!shouldContinue) {
-                break;
-            }
-            
-            shouldContinue = buildStep.prebuild(build, listener);
-        }
+        if (buildSteps != null) {
+	        for (BuildStep buildStep : buildSteps) {
+	            
+	            if (!shouldContinue) {
+	                break;
+	            }
+	            
+	            shouldContinue = buildStep.prebuild(build, listener);
+	        }
         
-        // execute build step, stop processing if indicated
-        for (BuildStep buildStep : buildSteps) {
-            
-            if (!shouldContinue) {
-                break;
-            }
-            
-            shouldContinue = buildStep.perform(build, launcher, listener);
+	        // execute build step, stop processing if indicated
+	        for (BuildStep buildStep : buildSteps) {
+	            
+	            if (!shouldContinue) {
+	                break;
+	            }
+	            
+	            shouldContinue = buildStep.perform(build, launcher, listener);
+	        }
         }
         
         return shouldContinue;
@@ -176,6 +209,7 @@ public class ReleaseWrapper extends BuildWrapper {
         @Override
         public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             ReleaseWrapper instance = new ReleaseWrapper();
+            instance.releaseVersionTemplate = formData.getString("releaseVersionTemplate");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
@@ -212,11 +246,7 @@ public class ReleaseWrapper extends BuildWrapper {
          * {@inheritDoc}
          */
         public String getIconFileName() {
-        	if (ReleaseWrapper.hasReleasePermission(project)) {
-        		return "package.gif";
-        	}
-        	
-        	return null;
+        	return ReleaseWrapper.hasReleasePermission(project) ? "package.gif" : null;
         }
 
         /**
@@ -334,11 +364,6 @@ public class ReleaseWrapper extends BuildWrapper {
 	                
 	                ParameterValue value = d.createValue(req, jo);
 	                
-	                // check if parameter value implements ReleaseVersionValue and if so, set release version
-	                if (value instanceof ReleaseVersionValue) {
-	                	releaseVersion = ((ReleaseVersionValue) value).getReleaseVersion();
-	                }
-	                
 	                paramValues.add(d.createValue(req, jo));
 	            }
             } else {
@@ -354,7 +379,7 @@ public class ReleaseWrapper extends BuildWrapper {
             
             // schedule release build
             if (!project.scheduleBuild(0, new Cause.UserCause(), 
-            		new ReleaseBuildBadgeAction(releaseVersion), 
+            		new ReleaseBuildBadgeAction(), 
             		new ParametersAction(paramValues))) {
             	// TODO redirect to error page?
             }
@@ -368,8 +393,7 @@ public class ReleaseWrapper extends BuildWrapper {
     public static class ReleaseBuildBadgeAction implements BuildBadgeAction {
         private String releaseVersion;
         
-        public ReleaseBuildBadgeAction(String releaseVersion) {
-            this.releaseVersion = releaseVersion;
+        public ReleaseBuildBadgeAction() {
         }
         
         public String getReleaseVersion() {

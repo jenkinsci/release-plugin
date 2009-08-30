@@ -1,10 +1,15 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
 	xmlns:p="/lib/hudson/project">
+		
+    <f:entry title="${%Release Version Template}" help="/plugin/release/help-releaseVersionTemplate.html">
+		<f:textbox field="releaseVersionTemplate" />
+	</f:entry>
 
 	<f:block>
 
 		<div style="padding-left: 2em">
+			
 			<label class="attach-previous">${%Release parameters}</label>
 			<f:hetero-list name="parameters" hasHeader="true"
 				descriptors="${h.getParameterDescriptors()}" items="${instance.parameterDefinitions}"
