@@ -119,7 +119,7 @@ public class ReleaseWrapper extends BuildWrapper {
                 // save build
                 build.keepLog();
                 
-                // only set description if we can derive version
+                // set description if we can derive version
                 if (releaseBuildBadge.getReleaseVersion() != null) {
                 
 	                // set build description to indicate release
@@ -233,6 +233,9 @@ public class ReleaseWrapper extends BuildWrapper {
             return project;
         }
         
+        /**
+         * @return The list of previous release version identifiers
+         */
         public List<String> getPreviousReleaseVersions() {
             LinkedList<String> previousReleaseVersions = new LinkedList<String>();
             
@@ -241,8 +244,10 @@ public class ReleaseWrapper extends BuildWrapper {
                 
                 ReleaseBuildBadgeAction badge = build.getAction(ReleaseBuildBadgeAction.class);
                 
-                if (badge != null && badge.getReleaseVersion() != null) {
-                    previousReleaseVersions.add(badge.getReleaseVersion());
+                if (badge != null) {
+                	if (badge.getReleaseVersion() != null) {
+                		previousReleaseVersions.add(badge.getReleaseVersion());
+	                }
                 }
             }
             
@@ -326,6 +331,14 @@ public class ReleaseWrapper extends BuildWrapper {
 	                ParameterDefinition d = getParameterDefinition(name);
 	                if(d==null)
 	                    throw new IllegalArgumentException("No such parameter definition: " + name);
+	                
+	                ParameterValue value = d.createValue(req, jo);
+	                
+	                // check if parameter value implements ReleaseVersionValue and if so, set release version
+	                if (value instanceof ReleaseVersionValue) {
+	                	releaseVersion = ((ReleaseVersionValue) value).getReleaseVersion();
+	                }
+	                
 	                paramValues.add(d.createValue(req, jo));
 	            }
             } else {

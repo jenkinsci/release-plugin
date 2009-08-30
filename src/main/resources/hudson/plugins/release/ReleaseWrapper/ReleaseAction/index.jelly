@@ -27,7 +27,7 @@
 		      </j:if>
 	          <tr><td colspan="3"><f:submit value="${%Schedule Release Build}"/></td></tr>
 	      </f:section>
-	      <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
+	      <j:if test="${!it.previousReleaseVersions.isEmpty()}">
 	        <f:section title="Previous release versions">
 	          <j:forEach var="t" items="${it.previousReleaseVersions}">
 	            <tr><td colspan="3">${t}</td></tr>
