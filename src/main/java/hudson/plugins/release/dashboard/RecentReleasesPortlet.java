@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.FeedAdapter;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
+import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.RSS;
 import hudson.model.Run;
@@ -41,7 +42,7 @@ public class RecentReleasesPortlet extends DashboardPortlet {
 			// Keep going through jobs while there are more builds
 			// and (the recent releases is less than max or this run 
 			// is newer than the last in the list)
-			for (Run run = job.getLastBuild(); run != null && (recentReleases.size() < max || run.getTimestamp().compareTo(recentReleases.getLast().getTimestamp()) > 0); run = run.getPreviousBuild()) {
+			for (Run run = job.getLastCompletedBuild(); run != null && (recentReleases.size() < max || run.getTimestamp().compareTo(recentReleases.getLast().getTimestamp()) > 0); run = run.getPreviousBuild()) {
 				ReleaseBuildBadgeAction rbb = run.getAction(ReleaseBuildBadgeAction.class);
 				
 				if (rbb != null) {
@@ -114,8 +115,16 @@ public class RecentReleasesPortlet extends DashboardPortlet {
             runs.newBuilds(), new RelativePathFeedAdapter(getDashboard().getUrl() + getUrl()), req, rsp );
     }
 	
-	@Extension
     public static class DescriptorImpl extends Descriptor<DashboardPortlet> {
+		
+		@Extension
+		public static DescriptorImpl newInstance() {
+			if (Hudson.getInstance().getPlugin("dashboard-view") != null) {
+				return new DescriptorImpl();
+			} else {
+				return null;
+			}
+		}
 
 		@Override
 		public String getDisplayName() {
