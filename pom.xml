@@ -29,7 +29,7 @@
   	<dependency>
   		<groupId>org.jvnet.hudson.plugins</groupId>
   		<artifactId>dashboard-view</artifactId>
-  		<version>1.2-SNAPSHOT</version>
+  		<version>1.1</version>
   		<optional>true</optional>
   	</dependency>
   </dependencies>
