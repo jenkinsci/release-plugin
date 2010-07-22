@@ -51,6 +51,7 @@ public class ReleaseWrapper extends BuildWrapper {
 	private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
 	private String releaseVersionTemplate;
+        private boolean doNotKeepLog;
 	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
@@ -68,7 +69,15 @@ public class ReleaseWrapper extends BuildWrapper {
     public void setReleaseVersionTemplate(String releaseVersionTemplate) {
 		this.releaseVersionTemplate = releaseVersionTemplate;
 	}
+
+    public boolean isDoNotKeepLog() {
+        return doNotKeepLog;
+    }
     
+    public void setDoNotKeepLog(boolean doNotKeepLog) {
+        this.doNotKeepLog = doNotKeepLog;
+    }
+
     public List<ParameterDefinition> getParameterDefinitions() {
 		return parameterDefinitions;
 	}
@@ -149,7 +158,9 @@ public class ReleaseWrapper extends BuildWrapper {
                     InterruptedException {
                 
                 // save build
-                build.keepLog();
+                if (!doNotKeepLog) {
+                    build.keepLog();
+                }
                 
                 // set description if we can derive version
                 if (releaseBuildBadge.getReleaseVersion() != null) {
@@ -228,6 +239,7 @@ public class ReleaseWrapper extends BuildWrapper {
         public BuildWrapper newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             ReleaseWrapper instance = new ReleaseWrapper();
             instance.releaseVersionTemplate = formData.getString("releaseVersionTemplate");
+            instance.doNotKeepLog = formData.getBoolean("doNotKeepLog");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());

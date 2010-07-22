@@ -6,6 +6,10 @@
 		<f:textbox field="releaseVersionTemplate" />
 	</f:entry>
 
+    <f:entry title="${%Do not mark build as keep forever}" help="/plugin/release/help-doNotKeepLog.html">
+      <f:checkbox name="doNotKeepLog" field="doNotKeepLog" />
+	</f:entry>
+
 	<f:block>
 
 		<div style="padding-left: 2em">
