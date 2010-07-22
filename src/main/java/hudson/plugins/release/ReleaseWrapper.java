@@ -34,6 +34,7 @@ import javax.servlet.ServletException;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.ArrayUtils;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -123,7 +124,7 @@ public class ReleaseWrapper extends BuildWrapper {
         ParametersAction parametersAction = build.getAction(ParametersAction.class);
         if (parametersAction != null) {
 	        // set up variable resolver from parameters action
-        	VariableResolver<String> resolver = parametersAction.createVariableResolver(build);
+        	VariableResolver<String> resolver = createVariableResolver(parametersAction, build);
 	        
         	// resolve template against resolver
         	String releaseVersion = Util.replaceMacro(releaseVersionTemplate != null && !"".equals(releaseVersionTemplate) ? releaseVersionTemplate : DEFAULT_RELEASE_VERSION_TEMPLATE, resolver);
@@ -160,6 +161,23 @@ public class ReleaseWrapper extends BuildWrapper {
                 return executeBuildSteps(postBuildSteps, build, launcher, listener);
             }
         };
+    }
+
+    /*
+     * Copied method from ParametersAction to reverse order of resolvers
+     * per HUDSON-5094
+     */
+    private VariableResolver<String> createVariableResolver(ParametersAction parametersAction, AbstractBuild<?,?> build) {
+        VariableResolver[] resolvers = new VariableResolver[parametersAction.getParameters().size()+1];
+        int i=0;
+        for (ParameterValue p : parametersAction.getParameters())
+            resolvers[i++] = p.createVariableResolver(build);
+
+        resolvers[i] = build.getBuildVariableResolver();
+
+        ArrayUtils.reverse(resolvers);
+
+        return new VariableResolver.Union<String>(resolvers);
     }
     
     private boolean executeBuildSteps(List<Builder> buildSteps, AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
