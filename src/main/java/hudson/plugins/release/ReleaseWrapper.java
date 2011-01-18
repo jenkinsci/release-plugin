@@ -17,6 +17,7 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
 import hudson.model.StringParameterValue;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
@@ -156,17 +157,20 @@ public class ReleaseWrapper extends BuildWrapper {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException,
                     InterruptedException {
+
+                Result result = build.getResult();
+                if (result == null || result.isBetterOrEqualTo(Result.UNSTABLE)) {
+                    // save build
+                    if (!doNotKeepLog) {
+                        build.keepLog();
+                    }
                 
-                // save build
-                if (!doNotKeepLog) {
-                    build.keepLog();
-                }
-                
-                // set description if we can derive version
-                if (releaseBuildBadge.getReleaseVersion() != null) {
-                
-	                // set build description to indicate release
-	                build.setDescription(releaseBuildBadge.getReleaseVersion());
+                    // set description if we can derive version
+                    if (releaseBuildBadge.getReleaseVersion() != null) {
+
+                            // set build description to indicate release
+                            build.setDescription(releaseBuildBadge.getReleaseVersion());
+                    }
                 }
 	                
                 return executeBuildSteps(postBuildSteps, build, launcher, listener);
