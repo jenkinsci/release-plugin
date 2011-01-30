@@ -57,6 +57,8 @@ public class ReleaseWrapper extends BuildWrapper {
 	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
+    private List<Builder> postSuccessfulBuildSteps = new ArrayList<Builder>();
+    private List<Builder> postFailedBuildSteps = new ArrayList<Builder>();
     
     /**
      * @stapler-constructor
@@ -115,6 +117,22 @@ public class ReleaseWrapper extends BuildWrapper {
     public void setPostBuildSteps(List<Builder> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
     }
+
+    public List<Builder> getPostSuccessfulBuildSteps() {
+        return postSuccessfulBuildSteps;
+    }
+
+    public void setPostSuccessfulBuildSteps(List<Builder> postSuccessfulBuildSteps) {
+        this.postSuccessfulBuildSteps = postSuccessfulBuildSteps;
+    }
+
+    public List<Builder> getPostFailedBuildSteps() {
+        return postFailedBuildSteps;
+    }
+
+    public void setPostFailedBuildSteps(List<Builder> postFailedBuildSteps) {
+        this.postFailedBuildSteps = postFailedBuildSteps;
+    }
     
     @Override
     public Action getProjectAction(AbstractProject job) {
@@ -158,23 +176,34 @@ public class ReleaseWrapper extends BuildWrapper {
             @Override
             public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException,
                     InterruptedException {
+                boolean shouldContinue = false;
 
-                Result result = build.getResult();
-                if (result == null || result.isBetterOrEqualTo(Result.UNSTABLE)) {
-                    // save build
-                    if (!doNotKeepLog) {
-                        build.keepLog();
+                try {
+                    Result result = build.getResult();
+                    if (result == null || result.isBetterOrEqualTo(Result.UNSTABLE)) {
+                        // save build
+                        if (!doNotKeepLog) {
+                            build.keepLog();
+                        }
+
+                        // set description if we can derive version
+                        if (releaseBuildBadge.getReleaseVersion() != null) {
+
+                                // set build description to indicate release
+                                build.setDisplayName(releaseBuildBadge.getReleaseVersion());
+                        }
+
+                        shouldContinue = executeBuildSteps(postSuccessfulBuildSteps, build, launcher, listener);
+                    } else {
+                        shouldContinue = executeBuildSteps(postFailedBuildSteps, build, launcher, listener);
                     }
-                
-                    // set description if we can derive version
-                    if (releaseBuildBadge.getReleaseVersion() != null) {
-
-                            // set build description to indicate release
-                            build.setDescription(releaseBuildBadge.getReleaseVersion());
+                } finally {
+                    if (shouldContinue) {
+                        shouldContinue = executeBuildSteps(postBuildSteps, build, launcher, listener);
                     }
                 }
-	                
-                return executeBuildSteps(postBuildSteps, build, launcher, listener);
+
+                return shouldContinue;
             }
         };
     }
@@ -248,6 +277,8 @@ public class ReleaseWrapper extends BuildWrapper {
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
+            instance.postSuccessfulBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulBuildSteps", Builder.all());
+            instance.postFailedBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedBuildSteps", Builder.all());
             return instance;
         }
         

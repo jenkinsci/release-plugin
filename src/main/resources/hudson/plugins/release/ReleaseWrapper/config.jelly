@@ -27,11 +27,29 @@
                      descriptors="${h.getBuilderDescriptors(it)}"
                      items="${instance.preBuildSteps}"
                      addCaption="${%Add release step}"/>
+
+			<br />
+
+			<!-- Post successful build steps -->
+			<label class="attach-previous">${%After successful release build}</label>
+    		<f:hetero-list name="postSuccessfulBuildSteps" hasHeader="true"
+                     descriptors="${h.getBuilderDescriptors(it)}"
+                     items="${instance.postSuccessfulBuildSteps}"
+                     addCaption="${%Add release step}"/>
+
+			<br />
+
+			<!-- Post failed build steps -->
+			<label class="attach-previous">${%After failed release build}</label>
+    		<f:hetero-list name="postFailedBuildSteps" hasHeader="true"
+                     descriptors="${h.getBuilderDescriptors(it)}"
+                     items="${instance.postFailedBuildSteps}"
+                     addCaption="${%Add release step}"/>
                      
 		    <br />
 		  
 		    <!-- Post build steps -->
-		    <label class="attach-previous">${%After release build}</label>
+		    <label class="attach-previous">${%After failed or successful release build}</label>
 		    <f:hetero-list name="postBuildSteps" hasHeader="true"
 		             descriptors="${h.getBuilderDescriptors(it)}"
 		             items="${instance.postBuildSteps}"
