@@ -27,6 +27,8 @@ import hudson.util.VariableResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -133,10 +135,10 @@ public class ReleaseWrapper extends BuildWrapper {
     public void setPostFailedBuildSteps(List<Builder> postFailedBuildSteps) {
         this.postFailedBuildSteps = postFailedBuildSteps;
     }
-    
+
     @Override
-    public Action getProjectAction(AbstractProject job) {
-        return new ReleaseAction(job);
+    public Collection<? extends Action> getProjectActions(AbstractProject job) {
+        return Collections.singletonList(new ReleaseAction(job));
     }
     
     @Override
