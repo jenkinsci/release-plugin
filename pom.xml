@@ -9,7 +9,7 @@
   <artifactId>release</artifactId>
   <packaging>hpi</packaging>
   <name>Hudson Release Plugin</name>
-  <version>1.11-SNAPSHOT</version>
+  <version>1.11</version>
   <description>Adds the ability to wrap your job with pre- and post- build steps which are only executed when a manual release build is triggered.</description>
   <url>http://wiki.hudson-ci.org/display/HUDSON/Release+Plugin</url>
   <developers>
@@ -33,4 +33,10 @@
   		<optional>true</optional>
   	</dependency>
   </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.java.net/svn/hudson~svn/tags/release-1.11</connection>
+    <developerConnection>scm:svn:https://svn.java.net/svn/hudson~svn/tags/release-1.11</developerConnection>
+    <url>https://svn.java.net/svn/hudson~svn/tags/release-1.11</url>
+  </scm>
 </project>
