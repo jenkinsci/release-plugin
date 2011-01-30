@@ -29,11 +29,46 @@
 	      </f:section>
 	      <j:if test="${!it.previousReleaseVersions.isEmpty()}">
 	        <f:section title="Previous release versions">
-	          <j:forEach var="t" items="${it.previousReleaseVersions}">
-	            <tr><td colspan="3">${t}</td></tr>
+   	         <script type="text/javascript">
+	         	function useReleaseParameters(releaseNo){
+	         		clearFields();
+	         		releaseParametersArray = $('release_'+releaseNo).getElementsBySelector('tr');
+	         		for(i=0; i&lt;releaseParametersArray.length; i++) { 
+ 						fieldName = releaseParametersArray[i].firstDescendant();
+	         			fieldValue = fieldName.next();
+		         		setFieldValue(fieldName.getAttribute('value'), fieldValue.getAttribute('value'));
+					}
+	         	}
+	         
+	         	function setFieldValue(pName, pValue){
+	         		$$('input[value="'+pName+'"]')[0].next('input').value=pValue;
+	         	}
+	         	
+	         	function clearFields(){
+	         		inputFields = $$('.setting-input');
+	         		inputFields.each(function(item) {
+					  item.clear();
+					});
+	         	}
+	         </script>
+	          <j:forEach var="t" items="${it.getInverseListFromKeySet(it.previousReleaseVersions.keySet())}">
+	            <tr>
+	            	<td style="border-width:1px" id="release_${t}" colspan="3" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${t})">
+	            	<b>#${t} - ${it.previousReleaseVersions.get(t)}</b>
+	            	<!-- show release build parameters -->
+	            	<j:if test="${!it.getReleaseBuildParameters(t).isEmpty()}">
+	        	    	<table style="margin-left:15px">
+	        	    	<j:set var="recentParameters" value="${it.getReleaseBuildParameters(t)}"/>
+	        	    	<j:forEach var="bp" items="${recentParameters.keySet()}">
+	            			<tr><td value="${bp}">${bp}:</td><td value="${recentParameters.get(bp)}">${recentParameters.get(bp)}</td></tr>
+	          			</j:forEach>
+	          			</table>
+	            	</j:if>
+	            	</td>
+	            </tr>
 	          </j:forEach>
 	        </f:section>
-	      </j:if>
+	       </j:if>
         </f:form>
     </l:main-panel>
   </l:layout>
