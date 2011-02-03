@@ -37,7 +37,7 @@
  						fieldName = releaseParametersArray[i].firstDescendant();
 	         			fieldValue = fieldName.next();
 		         		setFieldValue(fieldName.getAttribute('value'), fieldValue.getAttribute('value'));
-					}
+				}
 	         	}
 	         
 	         	function setFieldValue(pName, pValue){
@@ -51,20 +51,18 @@
 					});
 	         	}
 	         </script>
-	          <j:forEach var="t" items="${it.getInverseListFromKeySet(it.previousReleaseVersions.keySet())}">
+	          <j:forEach var="b" items="${it.getPreviousReleaseBuilds()}">
 	            <tr>
-	            	<td style="border-width:1px" id="release_${t}" colspan="3" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${t})">
-	            	<b>#${t} - ${it.previousReleaseVersions.get(t)}</b>
-	            	<!-- show release build parameters -->
-	            	<j:if test="${!it.getReleaseBuildParameters(t).isEmpty()}">
-	        	    	<table style="margin-left:15px">
-	        	    	<j:set var="recentParameters" value="${it.getReleaseBuildParameters(t)}"/>
-	        	    	<j:forEach var="bp" items="${recentParameters.keySet()}">
-	            			<tr><td value="${bp}">${bp}:</td><td value="${recentParameters.get(bp)}">${recentParameters.get(bp)}</td></tr>
-	          			</j:forEach>
-	          			</table>
-	            	</j:if>
+                        <j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
+	            	<j:if test="${!recentParameters.isEmpty()}">
+	            	<td style="border-width:1px" id="release_${b.number}" colspan="3" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${b.number})">
+                            <l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
+                                <j:forEach var="parameterValue" items="${recentParameters}">
+                                    <st:include it="${parameterValue}" page="value.jelly" />
+                                </j:forEach>
+                            </l:pane>
 	            	</td>
+	            	</j:if>
 	            </tr>
 	          </j:forEach>
 	        </f:section>

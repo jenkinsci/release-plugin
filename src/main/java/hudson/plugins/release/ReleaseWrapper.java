@@ -29,11 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 
@@ -334,8 +331,8 @@ public class ReleaseWrapper extends BuildWrapper {
         /**
          * @return A map of previous build numbers and release version identifiers
          */
-        public Map<Integer, String> getPreviousReleaseVersions() {
-        	Map<Integer, String> previousReleaseVersions = new HashMap<Integer, String>();
+        public List<AbstractBuild> getPreviousReleaseBuilds() {
+        	List<AbstractBuild> previousReleaseBuilds = new ArrayList<AbstractBuild>();
             
             for (Iterator iter = project.getBuilds().iterator(); iter.hasNext(); ) {
                 AbstractBuild build = (AbstractBuild) iter.next();
@@ -343,27 +340,27 @@ public class ReleaseWrapper extends BuildWrapper {
                 ReleaseBuildBadgeAction badge = build.getAction(ReleaseBuildBadgeAction.class);
                 
                 if (badge != null) {
-                	if (badge.getReleaseVersion() != null) {
-                		previousReleaseVersions.put(build.number, badge.getReleaseVersion());
-	                }
+                    previousReleaseBuilds.add(build);
                 }
             }
-            return previousReleaseVersions;
-        }
-        
-        public Map<String, String> getReleaseBuildParameters(int buildNumber){
-        	Map<String, String> releaseBuildParameters = new HashMap<String, String>();
-        	
-        	AbstractBuild build = (AbstractBuild) project.getBuildByNumber(buildNumber);
-        	releaseBuildParameters.putAll(build.getBuildVariables());
 
-        	return releaseBuildParameters;
+            return previousReleaseBuilds;
         }
-        
-        public Integer[] getInverseListFromKeySet(Set<Integer> set){
-        	Integer[] original = (Integer[]) set.toArray(new Integer[set.size()]);
-        	ArrayUtils.reverse(original);
-        	return original;
+
+        public String getReleaseVersionForBuild(AbstractBuild build) {
+            ReleaseBuildBadgeAction badge = build.getAction(ReleaseBuildBadgeAction.class);
+
+            return badge.getReleaseVersion();
+        }
+
+        public List<ParameterValue> getParametersForBuild(AbstractBuild build) {
+            ParametersAction parameters = build.getAction(ParametersAction.class);
+
+            if (parameters != null) {
+                return parameters.getParameters();
+            }
+
+            return Collections.emptyList();
         }
         
         public String getReleaseVersion() {
