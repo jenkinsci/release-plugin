@@ -192,7 +192,7 @@ public class ReleaseWrapper extends BuildWrapper {
                         if (releaseBuildBadge.getReleaseVersion() != null) {
 
                                 // set build description to indicate release
-                                build.setDisplayName(releaseBuildBadge.getReleaseVersion());
+                                build.setDescription(releaseBuildBadge.getReleaseVersion());
                         }
 
                         shouldContinue = executeBuildSteps(postSuccessfulBuildSteps, build, launcher, listener);
