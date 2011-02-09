@@ -1,0 +1,5 @@
+<j:jelly xmlns:j="jelly:core">
+  <div>
+    Not a release build
+  </div>
+</j:jelly>
