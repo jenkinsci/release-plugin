@@ -12,6 +12,7 @@ import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
+import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -19,6 +20,7 @@ import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
+import hudson.plugins.release.promotion.ReleasePromotionCondition;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -262,6 +264,14 @@ public class ReleaseWrapper extends BuildWrapper {
     
 	@Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
+
+        static {
+            // check if promoted plugins is installed and if so, register
+            // promotion condition
+            if (Hudson.getInstance().getPlugin("promoted-builds") != null) {
+                    ReleasePromotionCondition.registerExtension();
+            }
+        }
         
         @Override
         public String getDisplayName() {
