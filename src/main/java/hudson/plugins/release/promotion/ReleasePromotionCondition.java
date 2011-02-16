@@ -8,7 +8,9 @@ package hudson.plugins.release.promotion;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
 import hudson.model.Descriptor.FormException;
+import hudson.model.Hudson;
 import hudson.plugins.promoted_builds.PromotionBadge;
 import hudson.plugins.promoted_builds.PromotionCondition;
 import hudson.plugins.promoted_builds.PromotionConditionDescriptor;
@@ -36,8 +38,12 @@ public class ReleasePromotionCondition extends PromotionCondition {
         
     }
 
-    @Extension
+    public static void registerExtension() {
+        PromotionCondition.all().add(new DescriptorImpl());
+    }
+
     public static final class DescriptorImpl extends PromotionConditionDescriptor {
+
         public boolean isApplicable(AbstractProject<?,?> item) {
             return true;
         }
@@ -53,7 +59,5 @@ public class ReleasePromotionCondition extends PromotionCondition {
         public PromotionCondition newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return new ReleasePromotionCondition();
         }
-
-        public static final DescriptorImpl INSTANCE = new DescriptorImpl();
     }
 }
