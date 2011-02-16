@@ -1,5 +1,6 @@
 package hudson.plugins.release;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -156,7 +157,11 @@ public class ReleaseWrapper extends BuildWrapper {
 	        
         	// resolve template against resolver
         	String releaseVersion = Util.replaceMacro(releaseVersionTemplate != null && !"".equals(releaseVersionTemplate) ? releaseVersionTemplate : DEFAULT_RELEASE_VERSION_TEMPLATE, resolver);
-	                	
+
+        	// replace environment variables with actual values
+        	EnvVars env = build.getEnvironment(listener);
+        	releaseVersion = env.expand(releaseVersion);
+
         	// if release version is same as original, then blank it out
         	if (DEFAULT_RELEASE_VERSION_TEMPLATE.equals(releaseVersion)) {
         		releaseVersion = null;
