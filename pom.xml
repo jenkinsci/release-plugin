@@ -23,7 +23,6 @@
   		<id>petehayes</id>
   		<name>Peter Hayes</name>
   		<email>petehayes@gmail.com</email>
-  		<url>http://spiffysspace.blogspot.com/</url>
   		<timezone>-6</timezone>
   	</developer>
   </developers>
@@ -45,19 +44,5 @@
   		<optional>true</optional>
   	</dependency>
   </dependencies>
-
-  <repositories>
-      <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
-      </repository>
-  </repositories>
-  
-  <distributionManagement>
-    <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
-    </repository>
-  </distributionManagement>
 
 </project>
