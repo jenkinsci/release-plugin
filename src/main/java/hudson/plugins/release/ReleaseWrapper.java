@@ -55,7 +55,7 @@ public class ReleaseWrapper extends BuildWrapper {
 	private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
 	private String releaseVersionTemplate;
-        private boolean doNotKeepLog;
+    private boolean doNotKeepLog;
 	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
@@ -173,7 +173,7 @@ public class ReleaseWrapper extends BuildWrapper {
         }
         
         if (!executeBuildSteps(preBuildSteps, build, launcher, listener)) {
-            throw new IOException("Could not execute pre-build steps");
+            throw new IOException(Messages.ReleaseWrapper_CouldNotExecutePreBuildSteps());
         }
         
         // return environment
@@ -280,7 +280,7 @@ public class ReleaseWrapper extends BuildWrapper {
         
         @Override
         public String getDisplayName() {
-            return "Configure release build";
+            return Messages.ReleaseWrapper_ConfigureReleaseBuild();
         }
         
         @Override

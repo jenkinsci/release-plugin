@@ -10,7 +10,7 @@
 		<table width="100%">
 			<tr><td>
 			<f:form method="post" action="submit">
-		    	<f:section title="Define release">
+		    	<f:section title="${%Define release}">
 		          <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
 		          	  Please configure your specific release parameters in the project config page as these
 		          	  hard coded parameters will be removed in a future release.
@@ -31,7 +31,7 @@
 			</f:form>
 			</td></tr>
 			<tr><td>
-			<f:section title="Previous release versions">
+			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
 					<script type="text/javascript">
 		         	function useReleaseParameters(releaseNo){
@@ -92,7 +92,7 @@
 		            <tr>
 						<j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
 		            	<j:if test="${!recentParameters.isEmpty()}">
-		            		<td id="release_${b.number}" tooltip="${%Click to use build parameters} (Password, file and run parameters are not supported!)" onclick="javascript:useReleaseParameters(${b.number})">
+		            		<td id="release_${b.number}" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${b.number})">
 								<l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
 									<j:forEach var="parameterValue" items="${recentParameters}">
 	                                    <st:include it="${parameterValue}" page="value.jelly" />
