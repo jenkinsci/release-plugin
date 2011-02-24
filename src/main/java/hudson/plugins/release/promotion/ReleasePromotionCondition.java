@@ -45,7 +45,7 @@ public class ReleasePromotionCondition extends PromotionCondition {
         }
 
         public String getDisplayName() {
-            return "If the build is a release build";
+            return Messages.ReleasePromotionCondition_DisplayName();
         }
 
         public String getHelpFile() {
