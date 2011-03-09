@@ -15,11 +15,15 @@ import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
 import hudson.model.Hudson;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.PermalinkProjectAction;
+import hudson.model.PermalinkProjectAction.Permalink;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.plugins.release.promotion.ReleasePromotionCondition;
 import hudson.tasks.BuildStep;
@@ -34,6 +38,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
 
@@ -61,6 +66,50 @@ public class ReleaseWrapper extends BuildWrapper {
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
     private List<Builder> postSuccessfulBuildSteps = new ArrayList<Builder>();
     private List<Builder> postFailedBuildSteps = new ArrayList<Builder>();
+    
+    /**
+     * List of {@link Permalink}s for release builds.
+     */
+    public static final List<Permalink> RELEASE = new CopyOnWriteArrayList<Permalink>();
+
+    static {
+        RELEASE.add(new Permalink() {
+            public String getDisplayName() {
+                return Messages.ReleaseWrapper_LastReleaseBuild();
+            }
+
+            public String getId() {
+                return "lastReleaseBuild";
+            }
+
+            public Run<?,?> resolve(Job<?,?> job) {
+            	for(Run<?,?> build : job.getBuilds()){
+            		if(build.getAction(ReleaseBuildBadgeAction.class) != null){
+            			return build;
+            		}
+            	}
+                return null;
+            }
+        });
+        RELEASE.add(new Permalink() {
+            public String getDisplayName() {
+                return Messages.ReleaseWrapper_LastSuccessfulReleaseBuild();
+            }
+
+            public String getId() {
+                return "lastSuccessfulReleaseBuild";
+            }
+
+            public Run<?,?> resolve(Job<?,?> job) {
+            	for(Run<?,?> build : job.getBuilds()){
+            		if(build.getResult() == Result.SUCCESS && build.getAction(ReleaseBuildBadgeAction.class) != null){
+            			return build;
+            		}
+            	}
+                return null;
+            }
+        });
+    }
     
     /**
      * @stapler-constructor
@@ -301,8 +350,8 @@ public class ReleaseWrapper extends BuildWrapper {
             return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item);
         }
     }
-    
-    public class ReleaseAction implements Action {
+
+    public class ReleaseAction implements Action, PermalinkProjectAction {
         private AbstractProject project;
         private String releaseVersion;
         private String developmentVersion;    
@@ -481,6 +530,10 @@ public class ReleaseWrapper extends BuildWrapper {
             // redirect to status page
             resp.sendRedirect(project.getAbsoluteUrl());
         }
+
+		public List<Permalink> getPermalinks() {
+			return RELEASE;
+		}
 
     }
     
