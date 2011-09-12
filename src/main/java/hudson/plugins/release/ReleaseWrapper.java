@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2009-2011, Peter Hayes, Manufacture Francaise des Pneumatiques Michelin,
+ * Romain Seguy
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package hudson.plugins.release;
 
 import hudson.EnvVars;
@@ -57,11 +81,12 @@ import org.kohsuke.stapler.StaplerResponse;
  * @since 1.0
  */
 public class ReleaseWrapper extends BuildWrapper {
-	private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
+    private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
-	private String releaseVersionTemplate;
+    private String releaseVersionTemplate;
     private boolean doNotKeepLog;
-	private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
+    private boolean overrideBuildParameters;
+    private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
     private List<Builder> postSuccessfulBuildSteps = new ArrayList<Builder>();
@@ -118,12 +143,12 @@ public class ReleaseWrapper extends BuildWrapper {
     }
     
     public String getReleaseVersionTemplate() {
-		return releaseVersionTemplate;
-	}
+        return releaseVersionTemplate;
+    }
     
     public void setReleaseVersionTemplate(String releaseVersionTemplate) {
-		this.releaseVersionTemplate = releaseVersionTemplate;
-	}
+        this.releaseVersionTemplate = releaseVersionTemplate;
+    }
 
     public boolean isDoNotKeepLog() {
         return doNotKeepLog;
@@ -132,14 +157,22 @@ public class ReleaseWrapper extends BuildWrapper {
     public void setDoNotKeepLog(boolean doNotKeepLog) {
         this.doNotKeepLog = doNotKeepLog;
     }
+    
+    public boolean isOverrideBuildParameters() {
+        return overrideBuildParameters;
+    }
+    
+    public void setOverrideBuildParameters(boolean overrideBuildParameters) {
+        this.overrideBuildParameters = overrideBuildParameters;
+    }
 
     public List<ParameterDefinition> getParameterDefinitions() {
-		return parameterDefinitions;
-	}
+        return parameterDefinitions;
+    }
     
     public void setParameterDefinitions(List<ParameterDefinition> parameterDefinitions) {
-		this.parameterDefinitions = parameterDefinitions;
-	}
+        this.parameterDefinitions = parameterDefinitions;
+    }
     
     /**
      * @return Returns the preBuildSteps.
@@ -197,7 +230,7 @@ public class ReleaseWrapper extends BuildWrapper {
         final ReleaseBuildBadgeAction releaseBuildBadge = build.getAction(ReleaseBuildBadgeAction.class);
         
         if (releaseBuildBadge == null) {
-        	return new Environment() { };
+            return new Environment() { };
         }
         
         // Set the release version now by resolving build parameters against build and release version template
@@ -337,6 +370,7 @@ public class ReleaseWrapper extends BuildWrapper {
             ReleaseWrapper instance = new ReleaseWrapper();
             instance.releaseVersionTemplate = formData.getString("releaseVersionTemplate");
             instance.doNotKeepLog = formData.getBoolean("doNotKeepLog");
+            instance.overrideBuildParameters = formData.getBoolean("overrideBuildParameters");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
@@ -362,6 +396,14 @@ public class ReleaseWrapper extends BuildWrapper {
         
         public List<ParameterDefinition> getParameterDefinitions() {
         	return parameterDefinitions;
+        }
+
+        public List<ParameterDefinition> getBuildParameterDefinitions() {
+            ParametersDefinitionProperty paramsDefProp = (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
+            if (paramsDefProp != null) {
+                return paramsDefProp.getParameterDefinitions();
+            }
+            return null;
         }
 
         /**
@@ -444,16 +486,35 @@ public class ReleaseWrapper extends BuildWrapper {
         }
 
         /**
-         * Gets the {@link ParameterDefinition} of the given name, if any.
+         * Gets the {@link ParameterDefinition} of the given name, including
+         * the ones from the build parameters, if any.
          */
         public ParameterDefinition getParameterDefinition(String name) {
-        	if (parameterDefinitions == null) {
+            ParametersDefinitionProperty buildParamsDefProp = (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
+            List<ParameterDefinition> buildParameterDefinitions = null;
+            if (buildParamsDefProp != null) {
+                buildParameterDefinitions = buildParamsDefProp.getParameterDefinitions();
+            }
+
+            if (!overrideBuildParameters && parameterDefinitions == null
+                    || overrideBuildParameters && parameterDefinitions == null && buildParameterDefinitions == null) {
         		return null;
         	}
-        	
-            for (ParameterDefinition pd : parameterDefinitions)
-                if (pd.getName().equals(name))
+
+            for (ParameterDefinition pd : parameterDefinitions) {
+                if (pd.getName().equals(name)) {
                     return pd;
+                }
+            }
+
+            if (overrideBuildParameters) {
+                for (ParameterDefinition pd : buildParameterDefinitions) {
+                    if (pd.getName().equals(name)) {
+                        return pd;
+                    }
+                }
+            }
+
             return null;
         }
 
@@ -471,8 +532,7 @@ public class ReleaseWrapper extends BuildWrapper {
                 return defValues;
             
             /* Scan for all parameter with an associated default values */
-            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions())
-            {
+            for(ParameterDefinition paramDefinition : paramDefProp.getParameterDefinitions()) {
                ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
                 
                 if(defaultValue != null)
@@ -480,6 +540,10 @@ public class ReleaseWrapper extends BuildWrapper {
             }
             
             return defValues;
+        }
+        
+        public boolean isOverrideBuildParameters() {
+            return overrideBuildParameters;
         }
         
         public void doSubmit(StaplerRequest req, StaplerResponse resp) throws IOException, ServletException {
@@ -490,17 +554,26 @@ public class ReleaseWrapper extends BuildWrapper {
             req.bindParameters(this);
 
             // create parameter list
-            List<ParameterValue> paramValues = getDefaultParametersValues();
+            List<ParameterValue> paramValues;
+            if (isOverrideBuildParameters()) {
+                // if overrideBuildParameters is set, then build params are submitted
+                // within the list of release params -- no need to gather default values
+                paramValues = new ArrayList<ParameterValue>();
+            }
+            else {
+                paramValues = getDefaultParametersValues();
+            }
             
-            if (getParameterDefinitions() != null && !getParameterDefinitions().isEmpty()) {
+            if (getParameterDefinitions() != null && !getParameterDefinitions().isEmpty()
+                    || overrideBuildParameters &&  getBuildParameterDefinitions() != null && !getBuildParameterDefinitions().isEmpty()) {
 	            JSONObject formData = req.getSubmittedForm();
 	            
 	            JSONArray a = JSONArray.fromObject(formData.get("parameter"));
-	
+
 	            for (Object o : a) {
 	                JSONObject jo = (JSONObject) o;
 	                String name = jo.getString("name");
-	
+
 	                ParameterDefinition d = getParameterDefinition(name);
 	                if(d==null)
 	                    throw new IllegalArgumentException("No such parameter definition: " + name);
