@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2009-2011, Peter Hayes, Manufacture Française des Pneumatiques Michelin,
+ * Copyright (c) 2009-2011, Peter Hayes, Manufacture Francaise des Pneumatiques Michelin,
  * Romain Seguy
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
