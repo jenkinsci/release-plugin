@@ -45,6 +45,8 @@ import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PermalinkProjectAction;
+import hudson.model.Cause.UpstreamCause;
+import hudson.model.Fingerprint.RangeSet;
 import hudson.model.PermalinkProjectAction.Permalink;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -62,6 +64,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
@@ -86,6 +90,7 @@ public class ReleaseWrapper extends BuildWrapper {
     private String releaseVersionTemplate;
     private boolean doNotKeepLog;
     private boolean overrideBuildParameters;
+    private boolean releaseDownstream;
     private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
     private List<Builder> preBuildSteps = new ArrayList<Builder>();
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
@@ -156,6 +161,14 @@ public class ReleaseWrapper extends BuildWrapper {
     
     public void setDoNotKeepLog(boolean doNotKeepLog) {
         this.doNotKeepLog = doNotKeepLog;
+    }
+
+    public boolean isReleaseDownstream() {
+        return releaseDownstream;
+    }
+    
+    public void setReleaseDownstream(boolean releaseDownstream) {
+        this.releaseDownstream = releaseDownstream;
     }
     
     public boolean isOverrideBuildParameters() {
@@ -290,7 +303,14 @@ public class ReleaseWrapper extends BuildWrapper {
                         shouldContinue = executeBuildSteps(postBuildSteps, build, launcher, listener);
                     }
                 }
-
+                if (shouldContinue && releaseDownstream) {
+                    List<Action> buildActions = build.getActions();
+	                Map<AbstractProject,RangeSet> map = build.getDownstreamBuilds();
+	                for (Entry<AbstractProject, RangeSet> projectEntry : map.entrySet()) {
+						projectEntry.getKey().scheduleBuild(0,  new UpstreamCause((Run)build),
+		                		buildActions.toArray(new Action[buildActions.size()]));
+					}
+                }
                 return shouldContinue;
             }
         };
@@ -371,6 +391,7 @@ public class ReleaseWrapper extends BuildWrapper {
             instance.releaseVersionTemplate = formData.getString("releaseVersionTemplate");
             instance.doNotKeepLog = formData.getBoolean("doNotKeepLog");
             instance.overrideBuildParameters = formData.getBoolean("overrideBuildParameters");
+            instance.releaseDownstream = formData.getBoolean("releaseDownstream");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());

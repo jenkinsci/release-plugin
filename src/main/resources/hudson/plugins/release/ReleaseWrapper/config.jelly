@@ -39,6 +39,10 @@
         <f:checkbox name="overrideBuildParameters" field="overrideBuildParameters" />
     </f:entry>
 
+    <f:entry title="${%Propagate release to downstream jobs}" help="/plugin/release/help-doNotKeepLog.html">
+        <f:checkbox name="releaseDownstream" field="releaseDownstream" />
+    </f:entry>
+
 	<f:block>
 
 		<div style="padding-left: 2em">
