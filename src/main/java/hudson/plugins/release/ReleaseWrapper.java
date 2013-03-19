@@ -24,6 +24,7 @@
  */
 package hudson.plugins.release;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobProject;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -72,6 +73,8 @@ import org.apache.commons.lang.ArrayUtils;
 
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+
 
 /**
  * Wraps a build with pre and post build steps.  These steps can take
@@ -196,7 +199,7 @@ public class ReleaseWrapper extends BuildWrapper {
     }
     
     /**
-     * @param postBuildSteps The postBuildSteps to set.
+     * @param postSuccessBuildSteps The postBuildSteps to set.
      */
     public void setPostBuildSteps(List<Builder> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
@@ -381,7 +384,7 @@ public class ReleaseWrapper extends BuildWrapper {
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
-            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item);
+            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MultiJobProject.class.isInstance(item);
         }
     }
 
