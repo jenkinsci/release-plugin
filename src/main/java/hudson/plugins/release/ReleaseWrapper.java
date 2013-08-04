@@ -55,6 +55,8 @@ import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.VariableResolver;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixChildAction;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -381,7 +383,7 @@ public class ReleaseWrapper extends BuildWrapper {
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
-            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item);
+            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MatrixProject.class.isInstance(item);
         }
     }
 
@@ -610,7 +612,7 @@ public class ReleaseWrapper extends BuildWrapper {
 
     }
     
-    public static class ReleaseBuildBadgeAction implements BuildBadgeAction {
+    public static class ReleaseBuildBadgeAction implements BuildBadgeAction, MatrixChildAction {
         private String releaseVersion;
         
         public ReleaseBuildBadgeAction() {
