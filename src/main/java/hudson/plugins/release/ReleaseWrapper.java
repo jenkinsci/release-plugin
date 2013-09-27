@@ -57,6 +57,7 @@ import hudson.tasks.Builder;
 import hudson.util.VariableResolver;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixChildAction;
+import hudson.matrix.MatrixConfiguration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -344,7 +345,7 @@ public class ReleaseWrapper extends BuildWrapper {
     }
     
 	public static boolean hasReleasePermission(AbstractProject job) {
-		return job.hasPermission(Item.BUILD);
+		return job.hasPermission(Item.BUILD) && !MatrixConfiguration.class.isInstance(job);
 	}
 
 	public static void checkReleasePermission(AbstractProject job) {
