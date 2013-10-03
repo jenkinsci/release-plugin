@@ -105,5 +105,61 @@
 		             addCaption="${%Add release step}"/>
                 </div>
           </f:block>
+
+
+<j:if test="${descriptor.isMatrixProject(it)}">
+	<f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Pre matrix build steps -->
+			<label class="attach-previous">${%Before release build and all matrix configurations}</label>
+                        <f:hetero-list name="preMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h.getBuilderDescriptors(it)}"
+                             items="${instance.preMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+	<f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Post successful build steps -->
+			<label class="attach-previous">${%After successful release build and all matrix configurations}</label>
+                        <f:hetero-list name="postSuccessfulMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h.getBuilderDescriptors(it)}"
+                             items="${instance.postSuccessfulMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+
+
+         <f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Post failed build steps -->
+			<label class="attach-previous">${%After failed release build and all matrix configurations}</label>
+                        <f:hetero-list name="postFailedMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h.getBuilderDescriptors(it)}"
+                             items="${instance.postFailedMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+
+
+	<f:block>
+
+		<div style="padding-left: 2em">
+		  
+		    <!-- Post build steps -->
+		    <label class="attach-previous">${%After failed or successful release build and all matrix configurations}</label>
+		    <f:hetero-list name="postBuildSteps" hasHeader="true"
+		             descriptors="${h.getBuilderDescriptors(it)}"
+		             items="${instance.postBuildSteps}"
+		             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+</j:if>
   
 </j:jelly>

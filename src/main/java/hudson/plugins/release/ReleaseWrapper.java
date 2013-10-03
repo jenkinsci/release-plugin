@@ -58,6 +58,9 @@ import hudson.util.VariableResolver;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixChildAction;
 import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,7 +86,7 @@ import org.kohsuke.stapler.StaplerResponse;
  * @author Peter Hayes
  * @since 1.0
  */
-public class ReleaseWrapper extends BuildWrapper {
+public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
     private String releaseVersionTemplate;
@@ -94,6 +97,10 @@ public class ReleaseWrapper extends BuildWrapper {
     private List<Builder> postBuildSteps = new ArrayList<Builder>();
     private List<Builder> postSuccessfulBuildSteps = new ArrayList<Builder>();
     private List<Builder> postFailedBuildSteps = new ArrayList<Builder>();
+    private List<Builder> preMatrixBuildSteps = new ArrayList<Builder>();
+    private List<Builder> postSuccessfulMatrixBuildSteps = new ArrayList<Builder>();
+    private List<Builder> postFailedMatrixBuildSteps = new ArrayList<Builder>();
+    private List<Builder> postMatrixBuildSteps = new ArrayList<Builder>();
     
     /**
      * List of {@link Permalink}s for release builds.
@@ -192,6 +199,20 @@ public class ReleaseWrapper extends BuildWrapper {
     }
     
     /**
+     * @return Returns the preMatrixBuildSteps.
+     */
+    public List<Builder> getPreMatrixBuildSteps() {
+        return preMatrixBuildSteps;
+    }
+    
+    /**
+     * @param preBuildSteps The preMatrixBuildSteps to set.
+     */
+    public void setPreMatrixBuildSteps(List<Builder> preMatrixBuildSteps) {
+        this.preMatrixBuildSteps = preMatrixBuildSteps;
+    }
+    
+    /**
      * @return Returns the postBuildSteps.
      */
     public List<Builder> getPostBuildSteps() {
@@ -203,6 +224,20 @@ public class ReleaseWrapper extends BuildWrapper {
      */
     public void setPostBuildSteps(List<Builder> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
+    }
+    
+    /**
+     * @return Returns the postMatrixBuildSteps.
+     */
+    public List<Builder> getPostMatrixBuildSteps() {
+        return postMatrixBuildSteps;
+    }
+    
+    /**
+     * @param postMatrixBuildSteps The postMatrixBuildSteps to set.
+     */
+    public void setPostMatrixBuildSteps(List<Builder> postMatrixBuildSteps) {
+        this.postMatrixBuildSteps = postMatrixBuildSteps;
     }
 
     public List<Builder> getPostSuccessfulBuildSteps() {
@@ -221,9 +256,34 @@ public class ReleaseWrapper extends BuildWrapper {
         this.postFailedBuildSteps = postFailedBuildSteps;
     }
 
+    public List<Builder> getPostSuccessfulMatrixBuildSteps() {
+        return postSuccessfulMatrixBuildSteps;
+    }
+
+    public void setPostSuccessfulMatrixBuildSteps(List<Builder> postSuccessfulMatrixBuildSteps) {
+        this.postSuccessfulMatrixBuildSteps = postSuccessfulMatrixBuildSteps;
+    }
+
+    public List<Builder> getPostFailedMatrixBuildSteps() {
+        return postFailedMatrixBuildSteps;
+    }
+
+    public void setPostFailedMatrixBuildSteps(List<Builder> postFailedMatrixBuildSteps) {
+        this.postFailedMatrixBuildSteps = postFailedMatrixBuildSteps;
+    }
+
     @Override
     public Collection<? extends Action> getProjectActions(AbstractProject job) {
         return Collections.singletonList(new ReleaseAction(job));
+    }
+    
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        ReleaseAggregator instance = new ReleaseAggregator(build, launcher, listener);
+        instance.setPreMatrixBuildSteps(preMatrixBuildSteps);
+        instance.setPostSuccessfulMatrixBuildSteps(postSuccessfulMatrixBuildSteps);
+        instance.setPostFailedMatrixBuildSteps(postFailedMatrixBuildSteps);
+        instance.setPostMatrixBuildSteps(postMatrixBuildSteps);
+        return instance;
     }
     
     @Override
@@ -376,15 +436,23 @@ public class ReleaseWrapper extends BuildWrapper {
             instance.overrideBuildParameters = formData.getBoolean("overrideBuildParameters");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
             instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
+            instance.preMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preMatrixBuildSteps", Builder.all());
             instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
             instance.postSuccessfulBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulBuildSteps", Builder.all());
             instance.postFailedBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedBuildSteps", Builder.all());
+            instance.postMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postMatrixBuildSteps", Builder.all());
+            instance.postSuccessfulMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulMatrixBuildSteps", Builder.all());
+            instance.postFailedMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedMatrixBuildSteps", Builder.all());
             return instance;
         }
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
             return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MatrixProject.class.isInstance(item);
+        }
+
+        public boolean isMatrixProject(AbstractProject<?, ?> item) {
+            return MatrixProject.class.isInstance(item);
         }
     }
 
@@ -626,5 +694,91 @@ public class ReleaseWrapper extends BuildWrapper {
         public String getIconFileName() { return null; }
         public String getDisplayName() { return null; }
         public String getUrlName() { return null; }
+    }
+
+    public class ReleaseAggregator extends MatrixAggregator {
+        private List<Builder> preMatrixBuildSteps = new ArrayList<Builder>();
+        private List<Builder> postSuccessfulMatrixBuildSteps = new ArrayList<Builder>();
+        private List<Builder> postFailedMatrixBuildSteps = new ArrayList<Builder>();
+        private List<Builder> postMatrixBuildSteps = new ArrayList<Builder>();
+
+        public ReleaseAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+            super(build, launcher, listener);
+        }
+
+        /**
+         * @param preBuildSteps The preMatrixBuildSteps to set.
+         */
+        public void setPreMatrixBuildSteps(List<Builder> preMatrixBuildSteps) {
+            this.preMatrixBuildSteps = preMatrixBuildSteps;
+        }
+
+        /**
+         * @param postMatrixBuildSteps The postMatrixBuildSteps to set.
+         */
+        public void setPostMatrixBuildSteps(List<Builder> postMatrixBuildSteps) {
+            this.postMatrixBuildSteps = postMatrixBuildSteps;
+        }
+
+        public void setPostSuccessfulMatrixBuildSteps(List<Builder> postSuccessfulMatrixBuildSteps) {
+            this.postSuccessfulMatrixBuildSteps = postSuccessfulMatrixBuildSteps;
+        }
+
+        public void setPostFailedMatrixBuildSteps(List<Builder> postFailedMatrixBuildSteps) {
+            this.postFailedMatrixBuildSteps = postFailedMatrixBuildSteps;
+        }
+
+        @Override
+        public boolean startBuild() throws InterruptedException, IOException {
+            return executeBuildSteps(preMatrixBuildSteps, build, launcher, listener);
+        }
+
+        @Override
+        public boolean endBuild() throws InterruptedException, IOException {
+            boolean shouldContinue = true;
+
+            try {
+                Result result = build.getResult();
+
+                if (result == null || result.isBetterOrEqualTo(Result.UNSTABLE)) {
+                    shouldContinue = executeBuildSteps(postSuccessfulMatrixBuildSteps, build, launcher, listener);
+                } else {
+                    shouldContinue = executeBuildSteps(postFailedMatrixBuildSteps, build, launcher, listener);
+                }
+            } finally {
+                if (shouldContinue) {
+                    shouldContinue = executeBuildSteps(postMatrixBuildSteps, build, launcher, listener);
+                }
+            }
+            return shouldContinue;
+        }
+    
+        private boolean executeBuildSteps(List<Builder> buildSteps, AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            boolean shouldContinue = true;
+
+            // execute prebuild steps, stop processing if indicated
+            if (buildSteps != null) {
+                for (BuildStep buildStep : buildSteps) {
+
+                    if (!shouldContinue) {
+                        break;
+                    }
+
+                    shouldContinue = buildStep.prebuild(build, listener);
+                }
+
+                // execute build step, stop processing if indicated
+                for (BuildStep buildStep : buildSteps) {
+
+                    if (!shouldContinue) {
+                        break;
+                    }
+
+                    shouldContinue = buildStep.perform(build, launcher, listener);
+                }
+            }
+
+            return shouldContinue;
+        }
     }
 }
