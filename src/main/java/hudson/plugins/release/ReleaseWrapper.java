@@ -701,9 +701,12 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         private List<Builder> postSuccessfulMatrixBuildSteps = new ArrayList<Builder>();
         private List<Builder> postFailedMatrixBuildSteps = new ArrayList<Builder>();
         private List<Builder> postMatrixBuildSteps = new ArrayList<Builder>();
+        private boolean isNotRelease = true;
 
         public ReleaseAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
             super(build, launcher, listener);
+
+            this.isNotRelease = build.getAction(ReleaseBuildBadgeAction.class) == null;
         }
 
         /**
@@ -730,11 +733,19 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
 
         @Override
         public boolean startBuild() throws InterruptedException, IOException {
+            if (isNotRelease) {
+                return true;
+            }
+
             return executeBuildSteps(preMatrixBuildSteps, build, launcher, listener);
         }
 
         @Override
         public boolean endBuild() throws InterruptedException, IOException {
+            if (isNotRelease) {
+                return true;
+            }
+
             boolean shouldContinue = true;
 
             try {
