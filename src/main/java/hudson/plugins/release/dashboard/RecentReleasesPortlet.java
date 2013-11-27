@@ -9,7 +9,6 @@ import hudson.model.Job;
 import hudson.model.RSS;
 import hudson.model.Run;
 import hudson.model.User;
-import hudson.model.Cause.UserCause;
 import hudson.plugins.release.ReleaseWrapper.ReleaseBuildBadgeAction;
 import hudson.plugins.view.dashboard.DashboardPortlet;
 import hudson.tasks.Mailer;
@@ -162,12 +161,12 @@ public class RecentReleasesPortlet extends DashboardPortlet {
         }
 
         public String getEntryAuthor(Run entry) {
-        	// release builds are manual so get the UserCause
+        	// release builds are manual so get the UserIdCause
         	// and report rss entry as user who kicked off build
         	List<Cause> causes = entry.getCauses();
         	for (Cause cause : causes) {
-        		if (cause instanceof UserCause) {
-        			return User.get(((UserCause) cause).getUserName()).getFullName();
+        		if (cause instanceof Cause.UserIdCause) {
+        			return User.get(((Cause.UserIdCause) cause).getUserName()).getFullName();
         		}
         	}
         	

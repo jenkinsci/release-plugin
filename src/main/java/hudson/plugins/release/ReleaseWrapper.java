@@ -206,7 +206,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     }
     
     /**
-     * @param preBuildSteps The preMatrixBuildSteps to set.
+     * @param preMatrixBuildSteps The preMatrixBuildSteps to set.
      */
     public void setPreMatrixBuildSteps(List<Builder> preMatrixBuildSteps) {
         this.preMatrixBuildSteps = preMatrixBuildSteps;
@@ -220,7 +220,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     }
     
     /**
-     * @param postBuildSteps The postBuildSteps to set.
+     * @param postSuccessBuildSteps The postBuildSteps to set.
      */
     public void setPostBuildSteps(List<Builder> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
@@ -665,7 +665,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             }
             
             // schedule release build
-            if (!project.scheduleBuild(0, new Cause.UserCause(), 
+            if (!project.scheduleBuild(0, new Cause.UserIdCause(),
             		new ReleaseBuildBadgeAction(), 
             		new ParametersAction(paramValues))) {
             	// TODO redirect to error page?
@@ -710,7 +710,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         }
 
         /**
-         * @param preBuildSteps The preMatrixBuildSteps to set.
+         * @param preMatrixBuildSteps The preMatrixBuildSteps to set.
          */
         public void setPreMatrixBuildSteps(List<Builder> preMatrixBuildSteps) {
             this.preMatrixBuildSteps = preMatrixBuildSteps;
