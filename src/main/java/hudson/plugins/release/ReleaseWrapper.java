@@ -28,6 +28,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.matrix.MatrixRun;
 import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -342,6 +343,11 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
 
                                 // set build description to indicate release
                                 build.setDescription(releaseBuildBadge.getReleaseVersion());
+
+                                if (build instanceof MatrixRun) {
+                                       // also set the description for the parent if the build is a matrix one
+                                       ((MatrixRun) build).getParentBuild().setDescription(releaseBuildBadge.getReleaseVersion());
+                                }
                         }
 
                         shouldContinue = executeBuildSteps(postSuccessfulBuildSteps, build, launcher, listener);
