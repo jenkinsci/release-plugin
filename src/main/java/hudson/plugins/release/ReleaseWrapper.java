@@ -342,6 +342,11 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
 
                                 // set build description to indicate release
                                 build.setDescription(releaseBuildBadge.getReleaseVersion());
+
+                                if (build instanceof MatrixRun) {
+                                       // also set the description for the parent if the build is a matrix one
+                                       ((MatrixRun) build).getParentBuild().setDescription("1." + releaseBuildBadge.getReleaseVersion());
+                                }
                         }
 
                         shouldContinue = executeBuildSteps(postSuccessfulBuildSteps, build, launcher, listener);
