@@ -51,6 +51,9 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.plugins.release.promotion.ReleasePromotionCondition;
+import hudson.security.Permission;
+import hudson.security.PermissionGroup;
+import hudson.security.PermissionScope;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -88,6 +91,14 @@ import org.kohsuke.stapler.StaplerResponse;
  * @since 1.0
  */
 public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
+
+    public static final PermissionGroup PERMISSIONS = new PermissionGroup(ReleaseWrapper.class, Messages._ReleaseWrapper_PermissionsTitle());
+
+    /**
+     * Permission to trigger release builds.
+     */
+    public static final Permission RELEASE_PERMISSION = new Permission(PERMISSIONS,"Release",Messages._ReleaseWrapper_ReleasePermission_Description(),null, PermissionScope.ITEM);
+
     private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
     private String releaseVersionTemplate;
@@ -411,11 +422,11 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     }
     
 	public static boolean hasReleasePermission(AbstractProject job) {
-		return job.hasPermission(Item.BUILD) && !MatrixConfiguration.class.isInstance(job);
+		return job.hasPermission(RELEASE_PERMISSION) && !MatrixConfiguration.class.isInstance(job);
 	}
 
 	public static void checkReleasePermission(AbstractProject job) {
-		job.checkPermission(Item.BUILD);
+		job.checkPermission(RELEASE_PERMISSION);
 	}
     
 	@Extension
