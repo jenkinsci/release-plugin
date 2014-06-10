@@ -28,6 +28,7 @@ import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.matrix.MatrixRun;
@@ -74,6 +75,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -166,6 +168,18 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
      * @stapler-constructor
      */
     public ReleaseWrapper() {
+    }
+    
+    public List<Descriptor> getBuildSteps(AbstractProject<?,?> project)
+    {
+        List<Descriptor<Publisher>> publishers = Functions.getPublisherDescriptors(project);
+        List<Descriptor<Builder>> builders = Functions.getBuilderDescriptors(project);
+        
+        List<Descriptor> descriptors = new LinkedList<Descriptor>();
+        descriptors.addAll(publishers);
+        descriptors.addAll(builders);
+        
+        return descriptors;
     }
     
     public String getReleaseVersionTemplate() {
@@ -467,14 +481,15 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             return instance;
         }
         
-        private DescriptorExtensionList getSteps()
+        private ExtensionList getSteps()
         {
-            return DescriptorExtensionList.createDescriptorList(Jenkins.getInstance(), Publisher.class);
-                    //ExtensionList.create(Jenkins.getInstance(), BuildStep.class);
-            //list.addAll(Builder.all());
-            //list.addAll(Publisher.all());
-            //return list;
-            
+            DescriptorExtensionList<Publisher, Descriptor<Publisher>> publishers = DescriptorExtensionList.createDescriptorList(Jenkins.getInstance(), Publisher.class);
+            DescriptorExtensionList<Builder, Descriptor<Builder>> builders = DescriptorExtensionList.createDescriptorList(Jenkins.getInstance(), Builder.class);
+
+            ExtensionListImpl impl = new ExtensionListImpl();
+            impl.addAll(publishers);
+            impl.addAll(builders);
+            return impl;
         }
         
         @Override
@@ -484,6 +499,13 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
 
         public boolean isMatrixProject(AbstractProject<?, ?> item) {
             return MatrixProject.class.isInstance(item);
+        }
+
+        private static class ExtensionListImpl extends ExtensionList<Descriptor> {
+
+            public ExtensionListImpl() {
+                super(Jenkins.getInstance(), Descriptor.class);
+            }
         }
     }
 
