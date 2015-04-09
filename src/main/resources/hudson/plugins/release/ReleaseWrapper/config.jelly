@@ -32,8 +32,6 @@
      -->
     <j:set var="h2" value="${app.pluginManager.uberClassLoader.loadClass('hudson.plugins.release.ReleaseWrapperHelper').newInstance()}"/>	
 
-    <!-- ${app.pluginManager.uberClassLoader.loadClass('pkg.SomeExtension').getMethod('all', null).invoke(null, null)} -->
-
     <f:entry title="${%Release Version Template}" help="/plugin/release/help-releaseVersionTemplate.html">
         <f:textbox field="releaseVersionTemplate" />
     </f:entry>
