@@ -169,19 +169,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
      */
     public ReleaseWrapper() {
     }
-    
-    public List<Descriptor> getBuildSteps(AbstractProject<?,?> project)
-    {
-        List<Descriptor<Publisher>> publishers = Functions.getPublisherDescriptors(project);
-        List<Descriptor<Builder>> builders = Functions.getBuilderDescriptors(project);
-        
-        List<Descriptor> descriptors = new LinkedList<Descriptor>();
-        descriptors.addAll(publishers);
-        descriptors.addAll(builders);
-        
-        return descriptors;
-    }
-    
+       
     public String getReleaseVersionTemplate() {
         return releaseVersionTemplate;
     }
