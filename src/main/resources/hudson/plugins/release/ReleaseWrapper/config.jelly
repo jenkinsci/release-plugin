@@ -27,6 +27,11 @@
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
          xmlns:p="/lib/hudson/project">
 	
+    <!-- Due to bug JENKINS-26579 we can't just call j:new, we have to use this workaround to get an instance of the helper class
+	that we can then use to call the static method getBuildSteps()
+     -->
+    <j:set var="h2" value="${app.pluginManager.uberClassLoader.loadClass('hudson.plugins.release.ReleaseWrapperHelper').newInstance()}"/>	
+
     <f:entry title="${%Release Version Template}" help="/plugin/release/help-releaseVersionTemplate.html">
         <f:textbox field="releaseVersionTemplate" />
     </f:entry>
@@ -58,7 +63,7 @@
 			<!-- Pre build steps -->
 			<label class="attach-previous">${%Before release build}</label>
                         <f:hetero-list name="preBuildSteps" hasHeader="true"
-                             descriptors="${h.getBuilderDescriptors(it)}"
+                             descriptors="${h2.getBuildSteps(it)}"
                              items="${instance.preBuildSteps}"
                              addCaption="${%Add release step}"/>
                 </div>
@@ -72,7 +77,7 @@
 			<!-- Post successful build steps -->
 			<label class="attach-previous">${%After successful release build}</label>
                         <f:hetero-list name="postSuccessfulBuildSteps" hasHeader="true"
-                             descriptors="${h.getBuilderDescriptors(it)}"
+                             descriptors="${h2.getBuildSteps(it)}"
                              items="${instance.postSuccessfulBuildSteps}"
                              addCaption="${%Add release step}"/>
                 </div>
@@ -86,7 +91,7 @@
 			<!-- Post failed build steps -->
 			<label class="attach-previous">${%After failed release build}</label>
                         <f:hetero-list name="postFailedBuildSteps" hasHeader="true"
-                             descriptors="${h.getBuilderDescriptors(it)}"
+                             descriptors="${h2.getBuildSteps(it)}"
                              items="${instance.postFailedBuildSteps}"
                              addCaption="${%Add release step}"/>
                 </div>
@@ -100,10 +105,66 @@
 		    <!-- Post build steps -->
 		    <label class="attach-previous">${%After failed or successful release build}</label>
 		    <f:hetero-list name="postBuildSteps" hasHeader="true"
-		             descriptors="${h.getBuilderDescriptors(it)}"
+		             descriptors="${h2.getBuildSteps(it)}"
 		             items="${instance.postBuildSteps}"
 		             addCaption="${%Add release step}"/>
                 </div>
           </f:block>
+
+
+<j:if test="${descriptor.isMatrixProject(it)}">
+	<f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Pre matrix build steps -->
+			<label class="attach-previous">${%Before release build and all matrix configurations}</label>
+                        <f:hetero-list name="preMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h2.getBuildSteps(it)}"
+                             items="${instance.preMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+	<f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Post successful build steps -->
+			<label class="attach-previous">${%After successful release build and all matrix configurations}</label>
+                        <f:hetero-list name="postSuccessfulMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h.getPublisherDescriptors(it)}"
+                             items="${instance.postSuccessfulMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+
+
+         <f:block>
+
+		<div style="padding-left: 2em">
+
+			<!-- Post failed build steps -->
+			<label class="attach-previous">${%After failed release build and all matrix configurations}</label>
+                        <f:hetero-list name="postFailedMatrixBuildSteps" hasHeader="true"
+                             descriptors="${h2.getBuildSteps(it)}"
+                             items="${instance.postFailedMatrixBuildSteps}"
+                             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+
+
+	<f:block>
+
+		<div style="padding-left: 2em">
+		  
+		    <!-- Post build steps -->
+		    <label class="attach-previous">${%After failed or successful release build and all matrix configurations}</label>
+		    <f:hetero-list name="postBuildSteps" hasHeader="true"
+		             descriptors="${h2.getBuildSteps(it)}"
+		             items="${instance.postBuildSteps}"
+		             addCaption="${%Add release step}"/>
+                </div>
+          </f:block>
+</j:if>
   
 </j:jelly>

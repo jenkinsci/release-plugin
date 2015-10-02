@@ -25,10 +25,14 @@
 package hudson.plugins.release;
 
 import com.tikal.jenkins.plugins.multijob.MultiJobProject;
+import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.ExtensionList;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.matrix.MatrixRun;
 import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -51,21 +55,33 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.plugins.release.promotion.ReleasePromotionCondition;
+import hudson.security.Permission;
+import hudson.security.PermissionGroup;
+import hudson.security.PermissionScope;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.VariableResolver;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixChildAction;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
+import hudson.tasks.Publisher;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
+import jenkins.model.Jenkins;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -74,8 +90,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-
-
 /**
  * Wraps a build with pre and post build steps.  These steps can take
  * any action as part of the special release build.
@@ -83,17 +97,29 @@ import org.kohsuke.stapler.StaplerResponse;
  * @author Peter Hayes
  * @since 1.0
  */
-public class ReleaseWrapper extends BuildWrapper {
+public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
+
+    public static final PermissionGroup PERMISSIONS = new PermissionGroup(ReleaseWrapper.class, Messages._ReleaseWrapper_PermissionsTitle());
+
+    /**
+     * Permission to trigger release builds.
+     */
+    public static final Permission RELEASE_PERMISSION = new Permission(PERMISSIONS,"Release",Messages._ReleaseWrapper_ReleasePermission_Description(),null, PermissionScope.ITEM);
+
     private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
     private String releaseVersionTemplate;
     private boolean doNotKeepLog;
     private boolean overrideBuildParameters;
     private List<ParameterDefinition> parameterDefinitions = new ArrayList<ParameterDefinition>();
-    private List<Builder> preBuildSteps = new ArrayList<Builder>();
-    private List<Builder> postBuildSteps = new ArrayList<Builder>();
-    private List<Builder> postSuccessfulBuildSteps = new ArrayList<Builder>();
-    private List<Builder> postFailedBuildSteps = new ArrayList<Builder>();
+    private List<BuildStep> preBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postSuccessfulBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postFailedBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> preMatrixBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postSuccessfulMatrixBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postFailedMatrixBuildSteps = new ArrayList<BuildStep>();
+    private List<BuildStep> postMatrixBuildSteps = new ArrayList<BuildStep>();
     
     /**
      * List of {@link Permalink}s for release builds.
@@ -144,7 +170,7 @@ public class ReleaseWrapper extends BuildWrapper {
      */
     public ReleaseWrapper() {
     }
-    
+       
     public String getReleaseVersionTemplate() {
         return releaseVersionTemplate;
     }
@@ -180,50 +206,103 @@ public class ReleaseWrapper extends BuildWrapper {
     /**
      * @return Returns the preBuildSteps.
      */
-    public List<Builder> getPreBuildSteps() {
+    public List<BuildStep> getPreBuildSteps() {
         return preBuildSteps;
     }
     
     /**
      * @param preBuildSteps The preBuildSteps to set.
      */
-    public void setPreBuildSteps(List<Builder> preBuildSteps) {
+    public void setPreBuildSteps(List<BuildStep> preBuildSteps) {
         this.preBuildSteps = preBuildSteps;
+    }
+    
+    /**
+     * @return Returns the preMatrixBuildSteps.
+     */
+    public List<BuildStep> getPreMatrixBuildSteps() {
+        return preMatrixBuildSteps;
+    }
+    
+    /**
+     * @param preBuildSteps The preMatrixBuildSteps to set.
+     */
+    public void setPreMatrixBuildSteps(List<BuildStep> preMatrixBuildSteps) {
+        this.preMatrixBuildSteps = preMatrixBuildSteps;
     }
     
     /**
      * @return Returns the postBuildSteps.
      */
-    public List<Builder> getPostBuildSteps() {
+    public List<BuildStep> getPostBuildSteps() {
         return postBuildSteps;
     }
     
     /**
-     * @param postSuccessBuildSteps The postBuildSteps to set.
+     * @param postBuildSteps The postBuildSteps to set.
      */
-    public void setPostBuildSteps(List<Builder> postSuccessBuildSteps) {
+    public void setPostBuildSteps(List<BuildStep> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
     }
+    
+    /**
+     * @return Returns the postMatrixBuildSteps.
+     */
+    public List<BuildStep> getPostMatrixBuildSteps() {
+        return postMatrixBuildSteps;
+    }
+    
+    /**
+     * @param postMatrixBuildSteps The postMatrixBuildSteps to set.
+     */
+    public void setPostMatrixBuildSteps(List<BuildStep> postMatrixBuildSteps) {
+        this.postMatrixBuildSteps = postMatrixBuildSteps;
+    }
 
-    public List<Builder> getPostSuccessfulBuildSteps() {
+    public List<BuildStep> getPostSuccessfulBuildSteps() {
         return postSuccessfulBuildSteps;
     }
 
-    public void setPostSuccessfulBuildSteps(List<Builder> postSuccessfulBuildSteps) {
+    public void setPostSuccessfulBuildSteps(List<BuildStep> postSuccessfulBuildSteps) {
         this.postSuccessfulBuildSteps = postSuccessfulBuildSteps;
     }
 
-    public List<Builder> getPostFailedBuildSteps() {
+    public List<BuildStep> getPostFailedBuildSteps() {
         return postFailedBuildSteps;
     }
 
-    public void setPostFailedBuildSteps(List<Builder> postFailedBuildSteps) {
+    public void setPostFailedBuildSteps(List<BuildStep> postFailedBuildSteps) {
         this.postFailedBuildSteps = postFailedBuildSteps;
+    }
+
+    public List<BuildStep> getPostSuccessfulMatrixBuildSteps() {
+        return postSuccessfulMatrixBuildSteps;
+    }
+
+    public void setPostSuccessfulMatrixBuildSteps(List<BuildStep> postSuccessfulMatrixBuildSteps) {
+        this.postSuccessfulMatrixBuildSteps = postSuccessfulMatrixBuildSteps;
+    }
+
+    public List<BuildStep> getPostFailedMatrixBuildSteps() {
+        return postFailedMatrixBuildSteps;
+    }
+
+    public void setPostFailedMatrixBuildSteps(List<BuildStep> postFailedMatrixBuildSteps) {
+        this.postFailedMatrixBuildSteps = postFailedMatrixBuildSteps;
     }
 
     @Override
     public Collection<? extends Action> getProjectActions(AbstractProject job) {
         return Collections.singletonList(new ReleaseAction(job));
+    }
+    
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        ReleaseAggregator instance = new ReleaseAggregator(build, launcher, listener);
+        instance.setPreMatrixBuildSteps(preMatrixBuildSteps);
+        instance.setPostSuccessfulMatrixBuildSteps(postSuccessfulMatrixBuildSteps);
+        instance.setPostFailedMatrixBuildSteps(postFailedMatrixBuildSteps);
+        instance.setPostMatrixBuildSteps(postMatrixBuildSteps);
+        return instance;
     }
     
     @Override
@@ -282,6 +361,11 @@ public class ReleaseWrapper extends BuildWrapper {
 
                                 // set build description to indicate release
                                 build.setDescription(releaseBuildBadge.getReleaseVersion());
+
+                                if (build instanceof MatrixRun) {
+                                       // also set the description for the parent if the build is a matrix one
+                                       ((MatrixRun) build).getParentBuild().setDescription(releaseBuildBadge.getReleaseVersion());
+                                }
                         }
 
                         shouldContinue = executeBuildSteps(postSuccessfulBuildSteps, build, launcher, listener);
@@ -316,7 +400,7 @@ public class ReleaseWrapper extends BuildWrapper {
         return new VariableResolver.Union<String>(resolvers);
     }
     
-    private boolean executeBuildSteps(List<Builder> buildSteps, AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    private boolean executeBuildSteps(List<BuildStep> buildSteps, AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         boolean shouldContinue = true;
         
         // execute prebuild steps, stop processing if indicated
@@ -345,11 +429,11 @@ public class ReleaseWrapper extends BuildWrapper {
     }
     
 	public static boolean hasReleasePermission(AbstractProject job) {
-		return job.hasPermission(Item.BUILD);
+		return job.hasPermission(RELEASE_PERMISSION) && !MatrixConfiguration.class.isInstance(job);
 	}
 
 	public static void checkReleasePermission(AbstractProject job) {
-		job.checkPermission(Item.BUILD);
+		job.checkPermission(RELEASE_PERMISSION);
 	}
     
 	@Extension
@@ -375,16 +459,42 @@ public class ReleaseWrapper extends BuildWrapper {
             instance.doNotKeepLog = formData.getBoolean("doNotKeepLog");
             instance.overrideBuildParameters = formData.getBoolean("overrideBuildParameters");
             instance.parameterDefinitions = Descriptor.newInstancesFromHeteroList(req, formData, "parameters", ParameterDefinition.all());
-            instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", Builder.all());
-            instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", Builder.all());
-            instance.postSuccessfulBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulBuildSteps", Builder.all());
-            instance.postFailedBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedBuildSteps", Builder.all());
+            instance.preBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preBuildSteps", getSteps());
+            instance.preMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "preMatrixBuildSteps", getSteps());
+            instance.postBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postBuildSteps", getSteps());
+            instance.postSuccessfulBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulBuildSteps", getSteps());
+            instance.postFailedBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedBuildSteps", getSteps());
+            instance.postMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postMatrixBuildSteps", getSteps());
+            instance.postSuccessfulMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postSuccessfulMatrixBuildSteps", getSteps());
+            instance.postFailedMatrixBuildSteps = Descriptor.newInstancesFromHeteroList(req, formData, "postFailedMatrixBuildSteps", getSteps());
             return instance;
+        }
+        
+        private ExtensionList getSteps()
+        {
+            DescriptorExtensionList<Publisher, Descriptor<Publisher>> publishers = DescriptorExtensionList.createDescriptorList(Jenkins.getInstance(), Publisher.class);
+            DescriptorExtensionList<Builder, Descriptor<Builder>> builders = DescriptorExtensionList.createDescriptorList(Jenkins.getInstance(), Builder.class);
+
+            ExtensionListImpl impl = new ExtensionListImpl();
+            impl.addAll(publishers);
+            impl.addAll(builders);
+            return impl;
         }
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
-            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MultiJobProject.class.isInstance(item);
+            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item)  || MatrixProject.class.isInstance(item) || MultiJobProject.class.isInstance(item);
+        }
+
+        public boolean isMatrixProject(AbstractProject<?, ?> item) {
+            return MatrixProject.class.isInstance(item);
+        }
+
+        private static class ExtensionListImpl extends ExtensionList<Descriptor> {
+
+            public ExtensionListImpl() {
+                super(Jenkins.getInstance(), Descriptor.class);
+            }
         }
     }
 
@@ -613,7 +723,7 @@ public class ReleaseWrapper extends BuildWrapper {
 
     }
     
-    public static class ReleaseBuildBadgeAction implements BuildBadgeAction {
+    public static class ReleaseBuildBadgeAction implements BuildBadgeAction, MatrixChildAction {
         private String releaseVersion;
         
         public ReleaseBuildBadgeAction() {
@@ -626,5 +736,102 @@ public class ReleaseWrapper extends BuildWrapper {
         public String getIconFileName() { return null; }
         public String getDisplayName() { return null; }
         public String getUrlName() { return null; }
+    }
+
+    public class ReleaseAggregator extends MatrixAggregator {
+        private List<BuildStep> preMatrixBuildSteps = new ArrayList<BuildStep>();
+        private List<BuildStep> postSuccessfulMatrixBuildSteps = new ArrayList<BuildStep>();
+        private List<BuildStep> postFailedMatrixBuildSteps = new ArrayList<BuildStep>();
+        private List<BuildStep> postMatrixBuildSteps = new ArrayList<BuildStep>();
+        private boolean isNotRelease = true;
+
+        public ReleaseAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+            super(build, launcher, listener);
+
+            this.isNotRelease = build.getAction(ReleaseBuildBadgeAction.class) == null;
+        }
+
+        /**
+         * @param preBuildSteps The preMatrixBuildSteps to set.
+         */
+        public void setPreMatrixBuildSteps(List<BuildStep> preMatrixBuildSteps) {
+            this.preMatrixBuildSteps = preMatrixBuildSteps;
+        }
+
+        /**
+         * @param postMatrixBuildSteps The postMatrixBuildSteps to set.
+         */
+        public void setPostMatrixBuildSteps(List<BuildStep> postMatrixBuildSteps) {
+            this.postMatrixBuildSteps = postMatrixBuildSteps;
+        }
+
+        public void setPostSuccessfulMatrixBuildSteps(List<BuildStep> postSuccessfulMatrixBuildSteps) {
+            this.postSuccessfulMatrixBuildSteps = postSuccessfulMatrixBuildSteps;
+        }
+
+        public void setPostFailedMatrixBuildSteps(List<BuildStep> postFailedMatrixBuildSteps) {
+            this.postFailedMatrixBuildSteps = postFailedMatrixBuildSteps;
+        }
+
+        @Override
+        public boolean startBuild() throws InterruptedException, IOException {
+            if (isNotRelease) {
+                return true;
+            }
+
+            return executeBuildSteps(preMatrixBuildSteps, build, launcher, listener);
+        }
+
+        @Override
+        public boolean endBuild() throws InterruptedException, IOException {
+            if (isNotRelease) {
+                return true;
+            }
+
+            boolean shouldContinue = true;
+
+            try {
+                Result result = build.getResult();
+
+                if (result == null || result.isBetterOrEqualTo(Result.UNSTABLE)) {
+                    shouldContinue = executeBuildSteps(postSuccessfulMatrixBuildSteps, build, launcher, listener);
+                } else {
+                    shouldContinue = executeBuildSteps(postFailedMatrixBuildSteps, build, launcher, listener);
+                }
+            } finally {
+                if (shouldContinue) {
+                    shouldContinue = executeBuildSteps(postMatrixBuildSteps, build, launcher, listener);
+                }
+            }
+            return shouldContinue;
+        }
+    
+        private boolean executeBuildSteps(List<BuildStep> buildSteps, AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            boolean shouldContinue = true;
+
+            // execute prebuild steps, stop processing if indicated
+            if (buildSteps != null) {
+                for (BuildStep buildStep : buildSteps) {
+
+                    if (!shouldContinue) {
+                        break;
+                    }
+
+                    shouldContinue = buildStep.prebuild(build, listener);
+                }
+
+                // execute build step, stop processing if indicated
+                for (BuildStep buildStep : buildSteps) {
+
+                    if (!shouldContinue) {
+                        break;
+                    }
+
+                    shouldContinue = buildStep.perform(build, launcher, listener);
+                }
+            }
+
+            return shouldContinue;
+        }
     }
 }
