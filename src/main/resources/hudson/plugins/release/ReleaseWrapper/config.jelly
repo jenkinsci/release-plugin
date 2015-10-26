@@ -159,9 +159,9 @@
 		  
 		    <!-- Post build steps -->
 		    <label class="attach-previous">${%After failed or successful release build and all matrix configurations}</label>
-		    <f:hetero-list name="postBuildSteps" hasHeader="true"
+		    <f:hetero-list name="postMatrixBuildSteps" hasHeader="true"
 		             descriptors="${h2.getBuildSteps(it)}"
-		             items="${instance.postBuildSteps}"
+		             items="${instance.postMatrixBuildSteps}"
 		             addCaption="${%Add release step}"/>
                 </div>
           </f:block>
