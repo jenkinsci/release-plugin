@@ -24,6 +24,7 @@
  */
 package hudson.plugins.release;
 
+import com.tikal.jenkins.plugins.multijob.MultiJobProject;
 import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -482,7 +483,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
-            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MatrixProject.class.isInstance(item);
+            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item)  || MatrixProject.class.isInstance(item) || MultiJobProject.class.isInstance(item);
         }
 
         public boolean isMatrixProject(AbstractProject<?, ?> item) {
