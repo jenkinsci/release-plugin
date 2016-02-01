@@ -3,6 +3,7 @@ package hudson.plugins.release;
 import hudson.PluginWrapper;
 import hudson.model.Descriptor;
 
+import hudson.plugins.release.promotion.ReleasePromotionCondition;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -33,4 +34,10 @@ public class TestReleasePlugin
 		assertNotNull("Must have ReleaseWrapper descriptor", descriptor);
 	}
 
+	@Test
+	public void testPromotionDescriptorRegistered() throws Exception
+	{
+		Descriptor<?> descriptor = Descriptor.find(ReleasePromotionCondition.DescriptorImpl.class.getName());
+		assertNotNull("Must have ReleaseWrapper descriptor", descriptor);
+	}
 }
