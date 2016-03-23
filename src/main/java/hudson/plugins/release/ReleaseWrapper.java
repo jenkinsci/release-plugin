@@ -103,7 +103,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     /**
      * Permission to trigger release builds.
      */
-    public static final Permission RELEASE_PERMISSION = new Permission(PERMISSIONS,"Release",Messages._ReleaseWrapper_ReleasePermission_Description(),null, PermissionScope.ITEM);
+    public static final Permission RELEASE_PERMISSION = new Permission(PERMISSIONS,"Release",Messages._ReleaseWrapper_ReleasePermission_Description(),Jenkins.ADMINISTER, PermissionScope.ITEM);
 
     private static final String DEFAULT_RELEASE_VERSION_TEMPLATE = "Release #$RELEASE_VERSION";
 	
