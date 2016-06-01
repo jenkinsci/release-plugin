@@ -1,6 +1,7 @@
 <!--
   This view is used to render the plugin list page. 
 -->
+<?jelly escape-by-default='true'?>
 <div>
    This plugin allows you to configure pre and post build actions that are executed
    when a release build is manually triggered.

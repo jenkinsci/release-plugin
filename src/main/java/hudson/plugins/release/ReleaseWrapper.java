@@ -163,10 +163,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             }
         });
     }
-    
-    /**
-     * @stapler-constructor
-     */
+
     public ReleaseWrapper() {
     }
        
@@ -222,10 +219,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     public List<BuildStep> getPreMatrixBuildSteps() {
         return preMatrixBuildSteps;
     }
-    
-    /**
-     * @param preBuildSteps The preMatrixBuildSteps to set.
-     */
+
     public void setPreMatrixBuildSteps(List<BuildStep> preMatrixBuildSteps) {
         this.preMatrixBuildSteps = preMatrixBuildSteps;
     }
@@ -236,10 +230,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     public List<BuildStep> getPostBuildSteps() {
         return postBuildSteps;
     }
-    
-    /**
-     * @param postBuildSteps The postBuildSteps to set.
-     */
+
     public void setPostBuildSteps(List<BuildStep> postSuccessBuildSteps) {
         this.postBuildSteps = postSuccessBuildSteps;
     }
@@ -600,6 +591,9 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         /**
          * Gets the {@link ParameterDefinition} of the given name, including
          * the ones from the build parameters, if any.
+         *
+         * @param name The parameter name
+         * @return the parameter definition with the given name
          */
         public ParameterDefinition getParameterDefinition(String name) {
             ParametersDefinitionProperty buildParamsDefProp = (ParametersDefinitionProperty) project.getProperty(ParametersDefinitionProperty.class);
@@ -750,9 +744,6 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             this.isNotRelease = build.getAction(ReleaseBuildBadgeAction.class) == null;
         }
 
-        /**
-         * @param preBuildSteps The preMatrixBuildSteps to set.
-         */
         public void setPreMatrixBuildSteps(List<BuildStep> preMatrixBuildSteps) {
             this.preMatrixBuildSteps = preMatrixBuildSteps;
         }
