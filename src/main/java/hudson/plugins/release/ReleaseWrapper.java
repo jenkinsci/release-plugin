@@ -702,7 +702,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             // schedule release build
             if (!project.scheduleBuild(0, new Cause.UserCause(), 
             		new ReleaseBuildBadgeAction(), 
-            		new ParametersAction(paramValues))) {
+            		new SafeParametersAction(paramValues))) {
             	// TODO redirect to error page?
             }
             

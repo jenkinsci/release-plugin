@@ -35,7 +35,7 @@
 	<l:main-panel>
 		<table width="100%">
 			<tr><td>
-			<f:form method="post" action="submit">
+			<f:form method="post" action="submit" name="release-action-form">
                 <j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
                     <f:section title="${%Override build parameters}">
                         <j:forEach var="buildParameterDefinition" items="${it.buildParameterDefinitions}">
