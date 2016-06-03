@@ -21,7 +21,7 @@ public class SafeParametersAction extends ParametersAction {
     private final List<ParameterValue> parameters;
 
     /**
-     * At this point the list of parameter values is granted to be safe, which is
+     * At this point the list of parameter values is guaranteed to be safe, which is
      * parameter defined either at top level or release wrapper level.
      */
     SafeParametersAction(List<ParameterValue> parameters) {
