@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.FeedAdapter;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.RSS;
 import hudson.model.Run;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import javax.servlet.ServletException;
+import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -119,7 +119,7 @@ public class RecentReleasesPortlet extends DashboardPortlet {
 		
 		@Extension
 		public static DescriptorImpl newInstance() {
-			if (Hudson.getInstance().getPlugin("dashboard-view") != null) {
+			if (Jenkins.getActiveInstance().getPlugin("dashboard-view") != null) {
 				return new DescriptorImpl();
 			} else {
 				return null;
