@@ -723,7 +723,13 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         public String getUrlName() { return null; }
     }
 
-    public class ReleaseAggregator extends MatrixAggregator {
+    // Ideally needs rework to a REAL extension point implementation
+    /**
+     * Aggregates releases in matrix projects.
+     * @since 2.5 - First implementation
+     * @since 2.6 - Static class
+     */
+    public static class ReleaseAggregator extends MatrixAggregator {
         private List<BuildStep> preMatrixBuildSteps = new ArrayList<BuildStep>();
         private List<BuildStep> postSuccessfulMatrixBuildSteps = new ArrayList<BuildStep>();
         private List<BuildStep> postFailedMatrixBuildSteps = new ArrayList<BuildStep>();
