@@ -9,6 +9,7 @@ import hudson.model.RSS;
 import hudson.model.Run;
 import hudson.model.User;
 import hudson.model.Cause.UserCause;
+import hudson.model.Cause.UserIdCause;
 import hudson.plugins.release.ReleaseWrapper.ReleaseBuildBadgeAction;
 import hudson.plugins.view.dashboard.DashboardPortlet;
 import hudson.tasks.Mailer;
@@ -17,12 +18,14 @@ import hudson.util.RunList;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
 import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -161,18 +164,33 @@ public class RecentReleasesPortlet extends DashboardPortlet {
             return entry.getTimestamp();
         }
 
+        @Override
         public String getEntryAuthor(Run entry) {
-        	// release builds are manual so get the UserCause
-        	// and report rss entry as user who kicked off build
-        	List<Cause> causes = entry.getCauses();
-        	for (Cause cause : causes) {
-        		if (cause instanceof UserCause) {
-        			return User.get(((UserCause) cause).getUserName()).getFullName();
-        		}
-        	}
-        	
-        	// in the unexpected case where there is no user cause, return admin
-            return Mailer.descriptor().getAdminAddress();
+            // release builds are manual so get the UserCause
+            // and report rss entry as user who kicked off build
+            List<Cause> causes = entry.getCauses();
+            for (Cause cause : causes) {
+                final String userName;
+                if (cause instanceof UserIdCause) {
+                    userName = ((UserIdCause)cause).getUserName();
+                } else if (cause instanceof UserCause) {
+                    userName = ((UserCause)cause).getUserName();
+                } else {
+                    userName = null;
+                }
+                
+                if (userName != null) {
+                    final User usr = User.get(userName, false, Collections.emptyMap());
+                    return usr != null ? usr.getFullName() : userName;
+                }
+            }
+
+            // in the unexpected case where there is no user cause, return admin
+            final JenkinsLocationConfiguration jlc = JenkinsLocationConfiguration.get();
+            if (jlc == null) {
+                throw new IllegalStateException("JenkinsLocationConfiguration is not available");
+            }
+            return jlc.getAdminAddress();
         }
     }
 }
