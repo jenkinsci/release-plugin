@@ -23,7 +23,7 @@ public class TestReleasePluginMatrixJob {
 
     @Before
     public void createJob() throws Exception {
-        job = j.createMatrixProject("foo");
+        job = j.createProject(MatrixProject.class, "foo");
     }
 
     @After

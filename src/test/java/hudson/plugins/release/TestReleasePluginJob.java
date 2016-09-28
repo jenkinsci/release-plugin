@@ -89,7 +89,7 @@ public class TestReleasePluginJob
 		HtmlPage page = j.createWebClient().goTo("job/test/");
 		// Internationalisation not needed because the URL doesn't change between languages
 		// see getUrlName() in ReleaseAction
-		List<Object> nodes = page.selectNodes("//a[contains(@href, '/test/release')]");
+		List<?> nodes = page.getByXPath("//a[contains(@href, '/test/release')]");
 		assertThat("Require 2 href links", nodes.size(), is(2));
 	}
 
