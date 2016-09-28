@@ -428,14 +428,6 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
     
 	@Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
-
-        static {
-            // check if promoted plugins is installed and if so, register
-            // promotion condition
-            if (Hudson.getInstance().getPlugin("promoted-builds") != null) {
-                    ReleasePromotionCondition.registerExtension();
-            }
-        }
         
         @Override
         public String getDisplayName() {

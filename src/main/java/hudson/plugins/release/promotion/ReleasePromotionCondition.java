@@ -5,6 +5,7 @@
 
 package hudson.plugins.release.promotion;
 
+import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.plugins.promoted_builds.PromotionBadge;
@@ -30,14 +31,20 @@ public class ReleasePromotionCondition extends PromotionCondition {
         return null;
     }
 
+    /**
+     * Register a new instance of {@link PromotionConditionDescriptor} to this {@link PromotionCondition}
+     *
+     * @deprecated Caused duplication of descriptor (see JENKINS-11176). Replaced by the Extension annotation in
+     * the {@link PromotionConditionDescriptor}.
+     */
+    @Deprecated
+    public static void registerExtension() {}
+
     public static final class Badge extends PromotionBadge {
         
     }
 
-    public static void registerExtension() {
-        PromotionCondition.all().add(new DescriptorImpl());
-    }
-
+    @Extension(optional = true)
     public static final class DescriptorImpl extends PromotionConditionDescriptor {
 
         public boolean isApplicable(AbstractProject<?,?> item) {
