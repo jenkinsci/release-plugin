@@ -31,6 +31,7 @@ import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.ivy.IvyModuleSet;
 import hudson.matrix.MatrixRun;
 import hudson.maven.MavenModuleSet;
 import hudson.model.AbstractBuild;
@@ -80,12 +81,12 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
-import jenkins.model.Jenkins;
 
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.ArrayUtils;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -465,8 +466,15 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         
         @Override
         public boolean isApplicable(AbstractProject<?, ?> item) {
-            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MatrixProject.class.isInstance(item);
+            return FreeStyleProject.class.isInstance(item) || MavenModuleSet.class.isInstance(item) || MatrixProject.class.isInstance(item) || isApplicableFor3rdParty(item);
         }
+        
+        private boolean isApplicableFor3rdParty(AbstractProject<?, ?> item) {
+            if (Jenkins.getInstance().getPlugin("ivy") != null) {
+                return IvyModuleSet.class.isInstance(item);
+            }
+            return false;
+        } 
 
         public boolean isMatrixProject(AbstractProject<?, ?> item) {
             return MatrixProject.class.isInstance(item);
