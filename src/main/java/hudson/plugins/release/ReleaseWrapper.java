@@ -470,10 +470,14 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         }
         
         private boolean isApplicableFor3rdParty(AbstractProject<?, ?> item) {
-            if (Jenkins.getInstance().getPlugin("ivy") != null) {
-                return IvyModuleSet.class.isInstance(item);
+        	boolean isApplicable = false;
+            Jenkins jenkinsInstance = Jenkins.getInstance();
+            if (jenkinsInstance != null){
+                if (jenkinsInstance.getPlugin("ivy") != null) {
+                    isApplicable = IvyModuleSet.class.isInstance(item);
+                }
             }
-            return false;
+            return isApplicable;
         } 
 
         public boolean isMatrixProject(AbstractProject<?, ?> item) {
