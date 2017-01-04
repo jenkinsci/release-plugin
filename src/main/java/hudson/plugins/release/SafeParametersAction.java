@@ -23,8 +23,9 @@ public class SafeParametersAction extends ParametersAction {
     /**
      * At this point the list of parameter values is guaranteed to be safe, which is
      * parameter defined either at top level or release wrapper level.
+     * @param parameters parameters allowed by the job and parameters allowed by release-specific parameters definition
      */
-    SafeParametersAction(List<ParameterValue> parameters) {
+    public SafeParametersAction(List<ParameterValue> parameters) {
         this.parameters = parameters;
     }
 
