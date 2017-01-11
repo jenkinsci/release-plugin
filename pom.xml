@@ -30,7 +30,24 @@
   		<name>Peter Hayes</name>
   		<email>petehayes@gmail.com</email>
   		<timezone>-6</timezone>
+      <roles>
+        <role>creator (inactive)</role>
+      </roles>
   	</developer>
+    <developer>
+      <id>oleg_nenashev</id>
+      <name>Oleg Nenashev</name>
+      <roles>
+        <role>maintainer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>christ66</id>
+      <name>Steven Christou</name>
+      <roles>
+        <role>maintainer</role>
+      </roles>
+    </developer>
   </developers>
   <dependencies>
   	<dependency>
