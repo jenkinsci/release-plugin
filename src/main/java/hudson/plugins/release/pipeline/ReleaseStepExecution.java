@@ -84,11 +84,10 @@ public class ReleaseStepExecution extends StepExecution {
         getContext().get(TaskListener.class).getLogger()
                 .println("Releasing project: " + ModelHyperlinkNote.encodeTo(project));
 
-        StepContext context = getContext();
-        LOGGER.log(Level.FINER, "scheduling a release of {0} from {1}", new Object[] { project, context });
-        Action[] actions = new Action[] { new ReleaseTriggerAction(context),
-                new SafeParametersAction(updateParametersWithDefaults(project, step.getParameters())),
+        LOGGER.log(Level.FINER, "scheduling a release of {0} from {1}", new Object[] { project, getContext() });
+        Action[] actions = new Action[] { new ReleaseTriggerAction(getContext()),
                 new ReleaseWrapper.ReleaseBuildBadgeAction(),
+                new SafeParametersAction(updateParametersWithDefaults(project, step.getParameters())),
                 new CauseAction(new Cause.UpstreamCause(getContext().get(Run.class))) };
 
         Queue.Item item = ParameterizedJobMixIn.scheduleBuild2((Job<?, ?>) project, 0, actions);

@@ -20,9 +20,7 @@ import hudson.model.queue.FoldableAction;
  * @since 2.7
  */
 @SuppressWarnings("SynchronizeOnNonFinalField")
-class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
-    private static final Logger LOGGER = Logger.getLogger(ReleaseTriggerAction.class.getName());
-
+class ReleaseTriggerAction extends InvisibleAction {
     /** Record of one upstream build step. */
     static class Trigger {
 
@@ -52,21 +50,6 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
             }
         }
         return triggers;
-    }
-
-    @Override public void foldIntoExisting(Queue.Item item, Queue.Task owner, List<Action> otherActions) {
-        // there may be >1 upstream builds (or other unrelated causes) for a single downstream build
-        ReleaseTriggerAction existing = item.getAction(ReleaseTriggerAction.class);
-        if (existing == null) {
-            item.addAction(this);
-        } else {
-            if (!triggers.isEmpty()) {
-                synchronized (existing.triggers) {
-                    existing.triggers.addAll(triggers);
-                }
-            }
-        }
-        LOGGER.log(Level.FINE, "coalescing actions for {0}", item);
     }
 
 }
