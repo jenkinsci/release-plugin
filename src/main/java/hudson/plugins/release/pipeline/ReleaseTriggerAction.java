@@ -45,8 +45,10 @@ class ReleaseTriggerAction extends InvisibleAction {
     static Iterable<Trigger> triggersFor(Actionable actionable) {
         List<Trigger> triggers = new ArrayList<>();
         for (ReleaseTriggerAction action : actionable.getActions(ReleaseTriggerAction.class)) {
-            synchronized (action.triggers) {
-                triggers.addAll(action.triggers);
+            if (!action.triggers.isEmpty()) {
+                synchronized (action.triggers) {
+                    triggers.addAll(action.triggers);
+                }
             }
         }
         return triggers;
