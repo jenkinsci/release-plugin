@@ -21,7 +21,6 @@ import hudson.model.queue.FoldableAction;
  */
 @SuppressWarnings("SynchronizeOnNonFinalField")
 class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
-
     private static final Logger LOGGER = Logger.getLogger(ReleaseTriggerAction.class.getName());
 
     /** Record of one upstream build step. */
@@ -29,8 +28,7 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
 
         final StepContext context;
 
-
-        /** Record of cancellation cause passed to {@link ReleaseStep$Execution#stop}, if any. */
+        /** Record of cancellation cause passed to {@link ReleaseStepExecution#stop}, if any. */
         @CheckForNull Throwable interruption;
 
         Trigger(StepContext context) {
@@ -44,13 +42,6 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
     ReleaseTriggerAction(StepContext context) {
         triggers = new ArrayList<>();
         triggers.add(new Trigger(context));
-    }
-
-    private Object readResolve() {
-        if (triggers == null) {
-            triggers = new ArrayList<>();
-        }
-        return this;
     }
 
     static Iterable<Trigger> triggersFor(Actionable actionable) {
