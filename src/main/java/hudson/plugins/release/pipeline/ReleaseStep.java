@@ -27,18 +27,19 @@ import com.google.inject.Inject;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.console.ModelHyperlinkNote;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
+import hudson.model.BuildableItem;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Cause;
+import hudson.model.CauseAction;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.release.ReleaseWrapper;
 import hudson.plugins.release.SafeParametersAction;
 import jenkins.model.Jenkins;
@@ -47,20 +48,29 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
- * Created by e3cmea on 1/3/17.
+ * Pipeline step implementation for Release plugin.
  *
  * @author Alexey Merezhin
+ * @since 2.7
  */
 public class ReleaseStep extends AbstractStepImpl {
     private static final Logger LOGGER = Logger.getLogger(ReleaseStep.class.getName());
 
     private String job;
+    @Nonnull
     private List<ParameterValue> parameters;
 
     @DataBoundConstructor
     public ReleaseStep(String job) {
         this.job = job;
         parameters = new ArrayList<>();
+    }
+
+    private Object readResolve() {
+        if (parameters == null) {
+            parameters = new ArrayList<>();
+        }
+        return this;
     }
 
     public String getJob() {
@@ -75,8 +85,13 @@ public class ReleaseStep extends AbstractStepImpl {
         return parameters;
     }
 
-    @DataBoundSetter public void setParameters(List<ParameterValue> parameters) {
-        this.parameters = parameters;
+    @DataBoundSetter
+    public void setParameters(List<ParameterValue> parameters) {
+        if (parameters == null) {
+            this.parameters = new ArrayList<>();
+        } else {
+            this.parameters = parameters;
+        }
     }
 
     public static class Execution extends AbstractStepExecutionImpl {
@@ -85,7 +100,7 @@ public class ReleaseStep extends AbstractStepImpl {
 
         @Inject(optional=true) transient ReleaseStep step;
 
-        private List<ParameterValue> updateParametersWithDefaults(AbstractProject project,
+        private List<ParameterValue> updateParametersWithDefaults(ParameterizedJobMixIn.ParameterizedJob project,
                 List<ParameterValue> parameters) throws AbortException {
 
             if (project instanceof BuildableItemWithBuildWrappers) {
@@ -118,22 +133,27 @@ public class ReleaseStep extends AbstractStepImpl {
                 throw new AbortException("Job name is not defined.");
             }
 
-            final AbstractProject project = Jenkins.getActiveInstance()
-                                                   .getItem(step.getJob(), invokingRun.getParent(), AbstractProject.class);
+            final ParameterizedJobMixIn.ParameterizedJob project =
+                    Jenkins.getActiveInstance().
+                            getItem(step.getJob(), invokingRun.getParent(),
+                                    ParameterizedJobMixIn.ParameterizedJob.class);
             if (project == null) {
                 throw new AbortException("No parametrized job named " + step.getJob() + " found");
             }
             listener.getLogger().println("Releasing project: " + ModelHyperlinkNote.encodeTo(project));
 
-            List<Action> actions = new ArrayList<>();
             StepContext context = getContext();
-            actions.add(new ReleaseTriggerAction(context));
             LOGGER.log(Level.FINER, "scheduling a release of {0} from {1}", new Object[] { project, context });
-            actions.add(new SafeParametersAction(updateParametersWithDefaults(project, step.getParameters())));
-            actions.add(new ReleaseWrapper.ReleaseBuildBadgeAction());
+            Action[] actions = new Action[]{
+                    new ReleaseTriggerAction(context),
+                    new SafeParametersAction(updateParametersWithDefaults(project, step.getParameters())),
+                    new ReleaseWrapper.ReleaseBuildBadgeAction(),
+                    new CauseAction(new Cause.UpstreamCause(invokingRun))
+            };
 
-            QueueTaskFuture<?> task = project.scheduleBuild2(0, new Cause.UpstreamCause(invokingRun), actions);
-            if (task == null) {
+            Queue.Item item = ParameterizedJobMixIn.scheduleBuild2((Job<?, ?>) project, 0, actions);
+
+            if (item == null || item.getFuture() == null) {
                 throw new AbortException("Failed to trigger build of " + project.getFullName());
             }
 
@@ -174,8 +194,8 @@ public class ReleaseStep extends AbstractStepImpl {
                 Job<?,?> context = StaplerReferer.findItemFromRequest(Job.class);
                 Job<?,?> job = jenkins != null ? jenkins.getItem(step.getJob(), context, Job.class) : null;
 
-                AbstractProject project = Jenkins.getActiveInstance()
-                                                       .getItem(step.getJob(), context, AbstractProject.class);
+                BuildableItem project = Jenkins.getActiveInstance()
+                                               .getItem(step.getJob(), context, BuildableItem.class);
 
                 if (project instanceof BuildableItemWithBuildWrappers) {
                     ReleaseWrapper wrapper = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList()
@@ -199,7 +219,9 @@ public class ReleaseStep extends AbstractStepImpl {
                         step.setParameters(values);
                     }
                 } else {
-                    throw new IllegalArgumentException("Wrong job type: " + project.getClass().getName());
+                    String message = project == null ?
+                            "Can't find project " + step.getJob() : "Wrong job type: " + project.getClass().getName();
+                    throw new IllegalArgumentException(message);
                 }
             }
             return step;

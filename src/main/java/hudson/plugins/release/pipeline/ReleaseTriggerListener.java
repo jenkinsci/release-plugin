@@ -20,6 +20,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
 /**
  * copied from org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerListener
+ * @since 2.7
  */
 @Extension
 public class ReleaseTriggerListener extends RunListener<Run<?,?>>{

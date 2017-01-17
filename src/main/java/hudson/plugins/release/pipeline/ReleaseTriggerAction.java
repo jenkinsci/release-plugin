@@ -17,14 +17,12 @@ import hudson.model.queue.FoldableAction;
 
 /**
  * copied from org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerAction
+ * @since 2.7
  */
 @SuppressWarnings("SynchronizeOnNonFinalField")
 class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
 
     private static final Logger LOGGER = Logger.getLogger(ReleaseTriggerAction.class.getName());
-
-    @Deprecated
-    private StepContext context;
 
     /** Record of one upstream build step. */
     static class Trigger {
@@ -32,7 +30,7 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
         final StepContext context;
 
 
-        /** Record of cancellation cause passed to {@link BuildTriggerStepExecution#stop}, if any. */
+        /** Record of cancellation cause passed to {@link ReleaseStep$Execution#stop}, if any. */
         @CheckForNull Throwable interruption;
 
         Trigger(StepContext context) {
@@ -51,8 +49,6 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
     private Object readResolve() {
         if (triggers == null) {
             triggers = new ArrayList<>();
-            triggers.add(new Trigger(context));
-            context = null;
         }
         return this;
     }
@@ -73,8 +69,10 @@ class ReleaseTriggerAction extends InvisibleAction implements FoldableAction {
         if (existing == null) {
             item.addAction(this);
         } else {
-            synchronized (existing.triggers) {
-                existing.triggers.addAll(triggers);
+            if (!triggers.isEmpty()) {
+                synchronized (existing.triggers) {
+                    existing.triggers.addAll(triggers);
+                }
             }
         }
         LOGGER.log(Level.FINE, "coalescing actions for {0}", item);
