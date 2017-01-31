@@ -1,7 +1,6 @@
 package hudson.plugins.release.pipeline;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -24,7 +23,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.collect.ImmutableSet;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildableItem;
 import hudson.model.BuildableItemWithBuildWrappers;
@@ -95,7 +93,7 @@ public class ReleaseStep extends Step {
 
         @Override
         public String getDisplayName() {
-            return "Trigger release for the job";
+            return Messages.ReleaseStep_DisplayName();
         }
 
         @Override
@@ -117,31 +115,33 @@ public class ReleaseStep extends Step {
                 BuildableItem project = Jenkins.getActiveInstance()
                                                .getItem(step.getJob(), context, BuildableItem.class);
 
-                if (project instanceof BuildableItemWithBuildWrappers) {
+                if (project == null) {
+                    throw new IllegalArgumentException("Can't find project " + step.getJob());
+                } else if (project instanceof BuildableItemWithBuildWrappers) {
                     ReleaseWrapper wrapper = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList()
                                                                        .get(ReleaseWrapper.class);
                     if (wrapper == null) {
-                        throw new IllegalArgumentException("Job doesn't have release plugin configuration");
+                        throw new FormException("Job doesn't have release plugin configuration", "job");
                     }
                     List<ParameterDefinition> parameterDefinitions = wrapper.getParameterDefinitions();
                     if (parameterDefinitions != null) {
                         List<ParameterValue> values = new ArrayList<>();
                         for (Object o : params) {
-                            JSONObject jo = (JSONObject) o;
-                            String name = jo.getString("name");
-                            for (ParameterDefinition pd : parameterDefinitions) {
-                                if (name.equals(pd.getName())) {
-                                    ParameterValue parameterValue = pd.createValue(req, jo);
-                                    values.add(parameterValue);
+                            if (o instanceof JSONObject) {
+                                JSONObject jo = (JSONObject) o;
+                                String name = jo.getString("name");
+                                for (ParameterDefinition pd : parameterDefinitions) {
+                                    if (name.equals(pd.getName())) {
+                                        ParameterValue parameterValue = pd.createValue(req, jo);
+                                        values.add(parameterValue);
+                                    }
                                 }
                             }
                         }
                         step.setParameters(values);
                     }
                 } else {
-                    String message = project == null ?
-                            "Can't find project " + step.getJob() : "Wrong job type: " + project.getClass().getName();
-                    throw new IllegalArgumentException(message);
+                    throw new FormException("Wrong job type: " + project.getClass().getName(), "job");
                 }
             }
             return step;

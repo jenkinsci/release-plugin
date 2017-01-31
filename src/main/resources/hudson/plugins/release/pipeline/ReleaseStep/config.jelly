@@ -26,10 +26,10 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <j:set var="jobFieldId" value="${h.generateId()}"/>
-    <f:entry field="job" title="Project to Release">
+    <f:entry field="job" title="${%Project to Release}">
         <f:textbox onblur="loadParams()" id="${jobFieldId}"/>
     </f:entry>
-    <f:entry title="Parameters">
+    <f:entry title="${%Parameters}">
         <div id="params"/>
         <script>
             function loadParams() {

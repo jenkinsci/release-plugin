@@ -2,24 +2,18 @@ package hudson.plugins.release.pipeline;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.annotation.CheckForNull;
 
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-import hudson.model.Action;
 import hudson.model.Actionable;
 import hudson.model.InvisibleAction;
-import hudson.model.Queue;
-import hudson.model.queue.FoldableAction;
 
 /**
  * copied from org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerAction
  * @since 2.7
  */
-@SuppressWarnings("SynchronizeOnNonFinalField")
 class ReleaseTriggerAction extends InvisibleAction {
     /** Record of one upstream build step. */
     static class Trigger {
@@ -35,7 +29,7 @@ class ReleaseTriggerAction extends InvisibleAction {
 
     }
 
-    private /* final */ List<Trigger> triggers;
+    private final List<Trigger> triggers;
 
     ReleaseTriggerAction(StepContext context) {
         triggers = new ArrayList<>();
@@ -44,7 +38,7 @@ class ReleaseTriggerAction extends InvisibleAction {
 
     static Iterable<Trigger> triggersFor(Actionable actionable) {
         List<Trigger> triggers = new ArrayList<>();
-        for (ReleaseTriggerAction action : actionable.getActions(ReleaseTriggerAction.class)) {
+        for (final ReleaseTriggerAction action : actionable.getActions(ReleaseTriggerAction.class)) {
             if (!action.triggers.isEmpty()) {
                 synchronized (action.triggers) {
                     triggers.addAll(action.triggers);
