@@ -33,13 +33,16 @@ import hudson.model.ParameterValue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.release.ReleaseWrapper;
+import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * Pipeline step implementation for Release plugin.
+ * Pipeline step implementation for the Release plugin.
  *
  * @author Alexey Merezhin
  * @since 2.7
@@ -47,22 +50,35 @@ import net.sf.json.JSONObject;
 public class ReleaseStep extends Step {
     private static final Logger LOGGER = Logger.getLogger(ReleaseStep.class.getName());
 
+    /**
+     * Full name of the job.
+     * If {@code null}, the release step will fail
+     */
+    @CheckForNull
     private String job;
     @Nonnull
     private List<ParameterValue> parameters;
 
     @DataBoundConstructor
     public ReleaseStep(String job) {
-        this.job = job;
+        this.job = StringUtils.trimToNull(job);
         parameters = new ArrayList<>();
     }
 
+    /**
+     * Gets full name of the job to be released
+     * @return Full name of the job.
+     *         {@code null} if it is not specified in the Pipeline definition.
+     *         {@code null} will cause the build failure.
+     */
+    @CheckForNull
     public String getJob() {
         return job;
     }
 
+    @Restricted(NoExternalUse.class)
     public void setJob(String job) {
-        this.job = job;
+        this.job = StringUtils.trimToNull(job);
     }
 
     public List<ParameterValue> getParameters() {
@@ -104,24 +120,27 @@ public class ReleaseStep extends Step {
         @Override
         public Step newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             ReleaseStep step = (ReleaseStep) super.newInstance(req, formData);
+            
+            final String jobFullName = step.getJob();
+            if (jobFullName == null) {
+                throw new FormException("Job name is not specified or blank", "job");
+            }
+
             // Cf. ParametersDefinitionProperty._doBuild:
             Object parameter = formData.get("parameter");
             JSONArray params = parameter != null ? JSONArray.fromObject(parameter) : null;
             if (params != null) {
-                Jenkins jenkins = Jenkins.getInstance();
-                Job<?,?> context = StaplerReferer.findItemFromRequest(Job.class);
-                Job<?,?> job = jenkins != null ? jenkins.getItem(step.getJob(), context, Job.class) : null;
-
+                // TODO: Add support of relative paths like in the Promoted Builds plugin
                 BuildableItem project = Jenkins.getActiveInstance()
-                                               .getItem(step.getJob(), context, BuildableItem.class);
+                                               .getItemByFullName(jobFullName, BuildableItem.class);
 
                 if (project == null) {
-                    throw new IllegalArgumentException("Can't find project " + step.getJob());
+                    throw new FormException("Can't find buildable item " + jobFullName, "job");
                 } else if (project instanceof BuildableItemWithBuildWrappers) {
-                    ReleaseWrapper wrapper = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList()
-                                                                       .get(ReleaseWrapper.class);
+                    ReleaseWrapper wrapper = ((BuildableItemWithBuildWrappers) project)
+                            .getBuildWrappersList().get(ReleaseWrapper.class);
                     if (wrapper == null) {
-                        throw new FormException("Job doesn't have release plugin configuration", "job");
+                        throw new FormException("Job doesn't have the Release plugin configuration", "job");
                     }
                     List<ParameterDefinition> parameterDefinitions = wrapper.getParameterDefinitions();
                     if (parameterDefinitions != null) {
@@ -141,7 +160,7 @@ public class ReleaseStep extends Step {
                         step.setParameters(values);
                     }
                 } else {
-                    throw new FormException("Wrong job type: " + project.getClass().getName(), "job");
+                    throw new FormException("The job is not an instance of the BuildableItemWithBuildWrappers class: " + project.getClass().getName(), "job");
                 }
             }
             return step;
