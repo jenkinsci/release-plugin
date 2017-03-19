@@ -1,17 +1,19 @@
 package hudson.plugins.release.pipeline.ReleaseStep.DescriptorImpl
 
-import hudson.model.AbstractProject
+import hudson.model.Item
 import hudson.model.BuildableItemWithBuildWrappers
 import hudson.model.StringParameterDefinition
 import hudson.plugins.release.ReleaseWrapper;
 def st = namespace('jelly:stapler')
 def l = namespace('/lib/layout')
+//TODO: add support of warnings
+//TODO: support of folders???
 l.ajax {
     def jobName = request.getParameter('job')
     if (jobName != null) {
         def contextName = request.getParameter('context')
         def context = contextName != null ? app.getItemByFullName(contextName) : null
-        def project = app.getItem(jobName, context, AbstractProject)
+        def project = app.getItem(jobName, context, Item)
 
         if (project != null) {
             if (project instanceof BuildableItemWithBuildWrappers) {
@@ -32,15 +34,16 @@ l.ajax {
                         }
                     }
                 } else {
-                    text("${project.fullDisplayName} doesn't have release plugin configuration")
+                    text("${project.fullDisplayName} does not have the release configuration")
                 }
             } else {
-                text("${project.fullDisplayName} is of wrong type and can't be released: ${project.class.simpleName}")
+                text("${project.fullDisplayName} is of wrong type and can't be released: " +
+                     "(${project.class.simpleName} does not implement BuildableItemWithBuildWrappers)")
             }
         } else {
-            text("no such job ${jobName}")
+            text("No such item ${jobName}")
         }
     } else {
-        text('no job specified')
+        text('No item specified')
     }
 }
