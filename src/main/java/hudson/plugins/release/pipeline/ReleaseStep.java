@@ -47,6 +47,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
  * @author Alexey Merezhin
  * @since 2.7
  */
+@Restricted(NoExternalUse.class)
 public class ReleaseStep extends Step {
     private static final Logger LOGGER = Logger.getLogger(ReleaseStep.class.getName());
 

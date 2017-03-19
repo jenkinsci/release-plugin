@@ -17,12 +17,15 @@ import javax.annotation.Nonnull;
 
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * copied from org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerListener
  * @since 2.7
  */
 @Extension
+@Restricted(NoExternalUse.class)
 public class ReleaseTriggerListener extends RunListener<Run<?,?>>{
 
     private static final Logger LOGGER = Logger.getLogger(ReleaseTriggerListener.class.getName());

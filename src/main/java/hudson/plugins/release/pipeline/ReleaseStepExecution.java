@@ -29,11 +29,14 @@ import hudson.plugins.release.ReleaseWrapper;
 import hudson.plugins.release.SafeParametersAction;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * @author Alexey Merezhin
  * @since 2.7
  */
+@Restricted(NoExternalUse.class)
 public class ReleaseStepExecution extends StepExecution {
     private static final Logger LOGGER = Logger.getLogger(ReleaseStepExecution.class.getName());
 
