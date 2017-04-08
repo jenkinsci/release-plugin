@@ -18,6 +18,7 @@ import hudson.model.Action;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -28,11 +29,14 @@ import hudson.plugins.release.ReleaseWrapper;
 import hudson.plugins.release.SafeParametersAction;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * @author Alexey Merezhin
  * @since 2.7
  */
+@Restricted(NoExternalUse.class)
 public class ReleaseStepExecution extends StepExecution {
     private static final Logger LOGGER = Logger.getLogger(ReleaseStepExecution.class.getName());
 
@@ -63,7 +67,7 @@ public class ReleaseStepExecution extends StepExecution {
                     }
                 }
             } else {
-                throw new AbortException("Job doesn't have release plugin configuration");
+                throw new AbortException("Job doesn't have the Release plugin configuration");
             }
         }
         return parameters;
@@ -71,31 +75,36 @@ public class ReleaseStepExecution extends StepExecution {
 
     @Override
     public boolean start() throws Exception {
-        if (step.getJob() == null) {
+        final String jobFullName = step.getJob();
+        if (jobFullName == null) {
             throw new AbortException("Job name is not defined.");
         }
 
-        final ParameterizedJobMixIn.ParameterizedJob project = Jenkins.getActiveInstance().
-                getItemByFullName(step.getJob(), ParameterizedJobMixIn.ParameterizedJob.class);;
-        if (project == null) {
-            throw new AbortException("No parametrized job named " + step.getJob() + " found");
-        }
-        println("Releasing project: " + ModelHyperlinkNote.encodeTo(project));
+        final Item itemToRun = Jenkins.getActiveInstance().getItemByFullName(jobFullName);
+        if (itemToRun == null) {
+            throw new AbortException("No item found: " + jobFullName );
+        } else if (!(itemToRun instanceof Job<?, ?> && itemToRun instanceof ParameterizedJobMixIn.ParameterizedJob)) {
+            throw new AbortException("The specified item is not a parameterizable job: " + jobFullName );
+        } 
+        
+        final ParameterizedJobMixIn.ParameterizedJob jobToRun = (ParameterizedJobMixIn.ParameterizedJob) itemToRun;
+        println("Releasing job: " + ModelHyperlinkNote.encodeTo(jobToRun));
 
-        LOGGER.log(Level.FINER, "scheduling a release of {0} from {1}", new Object[] { project, getContext() });
+        LOGGER.log(Level.FINER, "Scheduling release of {0} from {1}", new Object[] { jobToRun, getContext() });
         Run run = getContext().get(Run.class);
         List<Action> actions = new ArrayList<>(3);
         actions.add(new ReleaseTriggerAction(getContext()));
         actions.add(new ReleaseWrapper.ReleaseBuildBadgeAction());
-        actions.add(new SafeParametersAction(updateParametersWithDefaults(project, step.getParameters())));
+        actions.add(new SafeParametersAction(updateParametersWithDefaults(jobToRun, step.getParameters())));
         if (run != null) {
             actions.add(new CauseAction(new Cause.UpstreamCause(run)));
         }
 
-        Queue.Item item = ParameterizedJobMixIn.scheduleBuild2((Job<?, ?>) project, 0, actions.toArray(new Action[0]));
+        Queue.Item item = ParameterizedJobMixIn.scheduleBuild2((Job<?, ?>)jobToRun, 0, 
+                actions.toArray(new Action[0]));
 
         if (item == null || item.getFuture() == null) {
-            throw new AbortException("Failed to trigger build of " + project.getFullName());
+            throw new AbortException("Failed to trigger build of " + jobToRun.getFullName());
         }
 
         return false;

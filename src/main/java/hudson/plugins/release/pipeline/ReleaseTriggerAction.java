@@ -9,11 +9,14 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 
 import hudson.model.Actionable;
 import hudson.model.InvisibleAction;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * copied from org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerAction
  * @since 2.7
  */
+@Restricted(NoExternalUse.class)
 class ReleaseTriggerAction extends InvisibleAction {
     /** Record of one upstream build step. */
     static class Trigger {
