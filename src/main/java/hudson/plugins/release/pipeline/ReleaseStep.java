@@ -59,6 +59,7 @@ public class ReleaseStep extends Step {
     private String job;
     @Nonnull
     private List<ParameterValue> parameters;
+    private boolean wait = true;
 
     @DataBoundConstructor
     public ReleaseStep(String job) {
@@ -93,6 +94,15 @@ public class ReleaseStep extends Step {
         } else {
             this.parameters = parameters;
         }
+    }
+
+    public boolean getWait() {
+        return wait;
+    }
+
+    @DataBoundSetter
+    public void setWait(boolean wait) {
+        this.wait = wait;
     }
 
     @Override

@@ -107,7 +107,12 @@ public class ReleaseStepExecution extends StepExecution {
             throw new AbortException("Failed to trigger build of " + jobToRun.getFullName());
         }
 
-        return false;
+        if (step.getWait()) {
+            return false;
+        } else {
+            getContext().onSuccess(null);
+            return true;
+        }
     }
 
     private void println(String message) throws IOException, InterruptedException {
