@@ -12,6 +12,7 @@ import org.jvnet.hudson.test.LoggerRule;
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
+import hudson.model.Label;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.release.ReleaseWrapper;
@@ -52,4 +53,13 @@ public class ReleaseStepTest {
         j.assertBuildStatus(Result.FAILURE, f);
     }
 
+    @Test
+    public void noWait() throws Exception {
+        FreeStyleProject ds = j.createFreeStyleProject("ds");
+        ds.setAssignedLabel(Label.get("nonexistent"));
+        ds.getBuildWrappersList().add(new ReleaseWrapper());
+        WorkflowJob us = j.jenkins.createProject(WorkflowJob.class, "us");
+        us.setDefinition(new CpsFlowDefinition("release job: 'ds', wait: false"));
+        j.buildAndAssertSuccess(us);
+    }
 }
