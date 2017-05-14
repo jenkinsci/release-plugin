@@ -29,6 +29,9 @@ THE SOFTWARE.
     <f:entry field="job" title="${%Job to Release}">
         <f:textbox onblur="loadParams()" id="${jobFieldId}"/>
     </f:entry>
+    <f:entry field="wait">
+        <f:checkbox default="true" title="Wait for completion"/>
+    </f:entry>
     <f:entry title="${%Parameters}">
         <div id="params"/>
         <script>
