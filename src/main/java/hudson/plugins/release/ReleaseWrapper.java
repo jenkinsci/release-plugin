@@ -87,6 +87,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.jenkinsci.plugins.jobgenerator.JobGenerator;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -475,6 +476,9 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
             if (jenkinsInstance != null){
                 if (jenkinsInstance.getPlugin("ivy") != null) {
                     isApplicable = IvyModuleSet.class.isInstance(item);
+                }
+                if(jenkinsInstance.getPlugin("jobgenerator") != null){
+                    isApplicable |= JobGenerator.class.isInstance(item);
                 }
             }
             return isApplicable;
