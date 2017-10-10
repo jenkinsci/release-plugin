@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.24</version>
+    <version>2.36</version>
   </parent>
   <artifactId>release</artifactId>
   <packaging>hpi</packaging>
@@ -51,11 +51,26 @@
     </developer>
   </developers>
   <dependencies>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>script-security</artifactId>
+      <version>1.21</version>
+    </dependency>
   	<dependency>
   		<groupId>org.jenkins-ci.main</groupId>
   		<artifactId>maven-plugin</artifactId>
-        <version>2.13</version>
+        <version>3.0</version>
   	</dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+      <version>1.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>jsch</artifactId>
+      <version>0.1.54.1</version>
+    </dependency>
   	<dependency>
   		<groupId>org.jenkins-ci.plugins</groupId>
   		<artifactId>dashboard-view</artifactId>
@@ -78,6 +93,13 @@
         <artifactId>ivy</artifactId>
         <version>1.22</version>
         <optional>true</optional>
+        <exclusions>
+          <exclusion>
+            <!-- Newer version comes from JSch Plugin -->
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
