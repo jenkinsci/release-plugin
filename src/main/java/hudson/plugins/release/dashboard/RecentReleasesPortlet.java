@@ -12,7 +12,6 @@ import hudson.model.Cause.UserCause;
 import hudson.model.Cause.UserIdCause;
 import hudson.plugins.release.ReleaseWrapper.ReleaseBuildBadgeAction;
 import hudson.plugins.view.dashboard.DashboardPortlet;
-import hudson.tasks.Mailer;
 import hudson.util.RunList;
 
 import java.io.IOException;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import javax.servlet.ServletException;
-import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -117,18 +115,9 @@ public class RecentReleasesPortlet extends DashboardPortlet {
         RSS.forwardToRss(getDisplayName()+ suffix, getDashboard().getUrl() + getUrl(),
             runs.newBuilds(), new RelativePathFeedAdapter(getDashboard().getUrl() + getUrl()), req, rsp );
     }
-	
-    public static class DescriptorImpl extends Descriptor<DashboardPortlet> {
-		
-		@Extension
-		public static DescriptorImpl newInstance() {
-			if (Jenkins.getActiveInstance().getPlugin("dashboard-view") != null) {
-				return new DescriptorImpl();
-			} else {
-				return null;
-			}
-		}
 
+    @Extension(optional = true)
+    public static class DescriptorImpl extends Descriptor<DashboardPortlet> {
 		@Override
 		public String getDisplayName() {
 			return "Recent Releases";
