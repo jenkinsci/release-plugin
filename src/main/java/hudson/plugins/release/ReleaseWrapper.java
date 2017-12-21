@@ -90,6 +90,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.jenkinsci.plugins.jobgenerator.JobGenerator;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Wraps a build with pre and post build steps.  These steps can take
@@ -659,7 +660,8 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         public boolean isOverrideBuildParameters() {
             return overrideBuildParameters;
         }
-        
+
+        @RequirePOST
         public void doSubmit(StaplerRequest req, StaplerResponse resp) throws IOException, ServletException {
         	// verify permission
         	ReleaseWrapper.checkReleasePermission(project);
