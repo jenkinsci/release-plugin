@@ -55,11 +55,12 @@ public class TestReleaseWrapper {
 
         FreeStyleProject job = j.createFreeStyleProject("test");
         String submitUrl = job.getShortUrl() + "release/submit";
-        URL releaseSubmitUrl = new URL(j.getURL() + submitUrl);
+        URL absoluteSubmitUrl = new URL(j.getURL() + submitUrl);
+        WebRequest postSubmit = new WebRequest(absoluteSubmitUrl, HttpMethod.POST);
 
         // the release plugin is not activated yet, so the page does not exist for the moment
         try {
-            wc.getPage(new WebRequest(releaseSubmitUrl, HttpMethod.POST));
+            wc.getPage(postSubmit);
             fail();
         } catch (FailingHttpStatusCodeException e) {
             assertEquals(HttpStatus.SC_NOT_FOUND, e.getStatusCode());
@@ -81,7 +82,7 @@ public class TestReleaseWrapper {
         }
 
         // the POST method must be used to submit a form
-        Page successSubmit = wc.getPage(new WebRequest(new URL(j.getURL() + submitUrl), HttpMethod.POST));
+        Page successSubmit = wc.getPage(postSubmit);
         Assert.assertEquals(HttpStatus.SC_OK, successSubmit.getWebResponse().getStatusCode());
     }
 }
