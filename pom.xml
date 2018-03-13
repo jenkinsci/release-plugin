@@ -4,14 +4,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.36</version>
+    <version>3.5</version>
   </parent>
   <artifactId>release</artifactId>
   <packaging>hpi</packaging>
   <name>Jenkins Release Plugin</name>
   <version>2.11-SNAPSHOT</version>
   <description>Adds the ability to wrap your job with pre- and post- build steps which are only executed when a manual release build is triggered.</description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Release+Plugin</url>
+  <url>https://wiki.jenkins.io/display/JENKINS/Release+Plugin</url>
 
   <properties>
     <!-- https://issues.jenkins-ci.org/browse/JENKINS-29692  https://issues.jenkins-ci.org/browse/JENKINS-28781 -->
@@ -39,7 +39,7 @@
       <id>oleg_nenashev</id>
       <name>Oleg Nenashev</name>
       <roles>
-        <role>maintainer</role>
+        <role>maintainer (retired)</role>
       </roles>
     </developer>
     <developer>
@@ -149,14 +149,14 @@
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
 </project>  
