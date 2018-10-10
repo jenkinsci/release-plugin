@@ -724,6 +724,10 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
 			return RELEASE;
 		}
 
+	    public Descriptor<?> getDescriptorByName(String className) {
+	        return project.getDescriptorByName(className);
+	    }
+
     }
     
     public static class ReleaseBuildBadgeAction implements BuildBadgeAction, MatrixChildAction {
