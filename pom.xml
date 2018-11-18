@@ -9,7 +9,7 @@
   <artifactId>release</artifactId>
   <packaging>hpi</packaging>
   <name>Jenkins Release Plugin</name>
-  <version>2.10.2-SNAPSHOT</version>
+  <version>2.10.2</version>
   <description>Adds the ability to wrap your job with pre- and post- build steps which are only executed when a manual release build is triggered.</description>
   <url>https://wiki.jenkins.io/display/JENKINS/Release+Plugin</url>
 
@@ -23,7 +23,7 @@
    <connection>scm:git:git://github.com/jenkinsci/release-plugin.git</connection>
    <developerConnection>scm:git:git@github.com:jenkinsci/release-plugin.git</developerConnection>
    <url>https://github.com/jenkinsci/release-plugin</url>
-    <tag>HEAD</tag>
+    <tag>release-2.10.2</tag>
   </scm>
   <developers>
   	<developer>
