@@ -30,40 +30,39 @@
 -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-<l:layout norefresh="true">
+<l:layout title="${%Release}">
 	<st:include it="${it.project}" page="sidepanel.jelly" />
 	<l:main-panel>
-		<table width="100%">
-			<tr><td>
-			<f:form method="post" action="submit" name="release-action-form">
-                <j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
-                    <f:section title="${%Override build parameters}">
-                        <j:forEach var="buildParameterDefinition" items="${it.buildParameterDefinitions}">
-                            <st:include it="${buildParameterDefinition}" page="${buildParameterDefinition.descriptor.valuePage}" />
-                        </j:forEach>
-				    </f:section>
-                </j:if>
-		    	<f:section title="${%Define release}">
-                    <j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
-                        Please configure your specific release parameters in the project config page as these
-                        hard coded parameters will be removed in a future release.
-                        <f:entry title="${%Release version}" help="/plugin/release/help-releaseVersion.html">
-                            <f:textbox name="releaseVersion" value="${it.releaseVersion}" />
-                        </f:entry>
-                        <f:entry title="${%Next development version}" help="/plugin/release/help-developmentVersion.html">
-                            <f:textbox name="developmentVersion" value="${it.developmentVersion}" />
-                        </f:entry>
-                    </j:if>
-                    <j:if test="${!it.parameterDefinitions.isEmpty()}">
-                        <j:forEach var="parameterDefinition" items="${it.parameterDefinitions}">
-                            <st:include it="${parameterDefinition}"	page="${parameterDefinition.descriptor.valuePage}" />
-                        </j:forEach>
-                    </j:if>
-		          <tr><td colspan="3"><f:submit value="${%Schedule Release Build}"/></td></tr>
+		<f:form method="post" action="submit" name="release-action-form">
+			<j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
+				<f:section title="${%Override build parameters}">
+					<j:forEach var="buildParameterDefinition" items="${it.buildParameterDefinitions}">
+						<st:include it="${buildParameterDefinition}" page="${buildParameterDefinition.descriptor.valuePage}" />
+					</j:forEach>
 				</f:section>
-			</f:form>
-			</td></tr>
-			<tr><td>
+			</j:if>
+			<f:section title="${%Define release}">
+				<j:if test="${it.parameterDefinitions == null || it.parameterDefinitions.isEmpty()}">
+					Please configure your specific release parameters in the project config page as these
+					hard coded parameters will be removed in a future release.
+					<f:entry title="${%Release version}" help="/plugin/release/help-releaseVersion.html">
+						<f:textbox name="releaseVersion" value="${it.releaseVersion}" />
+					</f:entry>
+					<f:entry title="${%Next development version}" help="/plugin/release/help-developmentVersion.html">
+						<f:textbox name="developmentVersion" value="${it.developmentVersion}" />
+					</f:entry>
+				</j:if>
+				<j:if test="${!it.parameterDefinitions.isEmpty()}">
+					<j:forEach var="parameterDefinition" items="${it.parameterDefinitions}">
+						<st:include it="${parameterDefinition}"	page="${parameterDefinition.descriptor.valuePage}" />
+					</j:forEach>
+				</j:if>
+				<f:block>
+			  		<f:submit value="${%Schedule Release Build}"/>
+				</f:block>
+			</f:section>
+		</f:form>
+		<table width="100%">
 			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
 					<script type="text/javascript">
@@ -137,7 +136,6 @@
 		          </j:forEach>
 		        </j:if>
 			</f:section>
-			</td></tr>
 		</table>
     </l:main-panel>
   </l:layout>
