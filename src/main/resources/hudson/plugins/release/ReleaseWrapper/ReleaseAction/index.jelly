@@ -33,8 +33,6 @@
 <l:layout norefresh="true">
 	<st:include it="${it.project}" page="sidepanel.jelly" />
 	<l:main-panel>
-		<table width="100%">
-			<tr><td>
 			<f:form method="post" action="submit" name="release-action-form">
                 <j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
                     <f:section title="${%Override build parameters}">
@@ -59,11 +57,10 @@
                             <st:include it="${parameterDefinition}"	page="${parameterDefinition.descriptor.valuePage}" />
                         </j:forEach>
                     </j:if>
-		          <tr><td colspan="3"><f:submit value="${%Schedule Release Build}"/></td></tr>
+		          <f:submit value="${%Schedule Release Build}"/>
 				</f:section>
 			</f:form>
-			</td></tr>
-			<tr><td>
+
 			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
 					<script type="text/javascript">
@@ -81,7 +78,7 @@
 		         	}
 		         
 		         	function setFieldValue(pName, pValueElement){
-			         	inputElement = $$('form[action="submit"] input[value="'+pName+'"]')[0];     		
+			         	inputElement = $$('form[action="submit"] input[value="'+pName+'"]')[0];
 		       			if(pValueElement.getAttribute('type') == "text"){
 			    	     	//Text field
 			         		fieldValue = pValueElement.getAttribute('value');
@@ -93,7 +90,7 @@
 				         	}
 		    	     	}else if(pValueElement.getAttribute('type') == "checkbox"){
 			         		//Boolean parameter
-			         		fieldValue = pValueElement.getAttribute('checked');         		
+			         		fieldValue = pValueElement.getAttribute('checked');
 		         			if(fieldValue == null){
 		         				fieldValue = false;
 		         			}
@@ -110,7 +107,7 @@
 		         	function clearChoice(pName){
 		         		optionsArray = $$('form[action="submit"] input[value="'+pName+'"]')[0].next('select').getElementsBySelector('option');
 		         		optionsArray.each(function(item){
-							item.removeAttribute("selected");         		
+							item.removeAttribute("selected");
 		         		});
 		         	}
 		         	
@@ -122,23 +119,24 @@
 		         	}
 					</script>
 					<j:forEach var="b" items="${it.getPreviousReleaseBuilds()}">
-		            <tr>
+		            <f:block>
+		              <f:nested>
 						<j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
 		            	<j:if test="${!recentParameters.isEmpty()}">
-		            		<td id="release_${b.number}" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${b.number})">
-								<l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
+								<l:pane id="release_${b.number}"
+									title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}"
+									onclick="javascript:useReleaseParameters(${b.number})"
+									tooltip="${%Click to use build parameters}">
 									<j:forEach var="parameterValue" items="${recentParameters}">
 	                                    <st:include it="${parameterValue}" page="value.jelly" />
 	                                </j:forEach>
 								</l:pane>
-							</td>
 		            	</j:if>
-		            </tr>
+		              </f:nested>
+		            </f:block>
 		          </j:forEach>
 		        </j:if>
 			</f:section>
-			</td></tr>
-		</table>
     </l:main-panel>
   </l:layout>
 </j:jelly>
