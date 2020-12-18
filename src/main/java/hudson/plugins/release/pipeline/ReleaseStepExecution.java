@@ -114,7 +114,6 @@ public class ReleaseStepExecution extends StepExecution {
         TaskListener taskListener = getContext().get(TaskListener.class);
         if (taskListener == null) return;
         PrintStream taskLogger = taskListener.getLogger();
-        if (taskLogger == null) return;
         taskLogger.println(message);
     }
 
