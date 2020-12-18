@@ -737,7 +737,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
         }
         
         public String getReleaseVersion() {
-            return releaseVersion;
+            return Util.xmlEscape(releaseVersion);
         }
         
         public String getIconFileName() { return null; }
