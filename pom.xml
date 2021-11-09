@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.14</version>
+        <version>4.31</version>
     </parent>
     <artifactId>release</artifactId>
     <packaging>hpi</packaging>
@@ -16,7 +16,7 @@
     <url>https://github.com/jenkinsci/release-plugin</url>
 
     <properties>
-        <jenkins.version>2.235.1</jenkins.version>
+        <jenkins.version>2.308</jenkins.version>
         <java.level>8</java.level>
     </properties>
 
@@ -56,10 +56,15 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.235.x</artifactId>
-                <version>19</version>
+                <artifactId>bom-2.303.x</artifactId>
+                <version>1008.vb9e22885c9cf</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>3.8.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -72,7 +77,7 @@
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>3.8</version>
+            <version>3.15.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
