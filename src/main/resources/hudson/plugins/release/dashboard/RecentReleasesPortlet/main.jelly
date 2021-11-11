@@ -69,12 +69,22 @@ THE SOFTWARE.
     </j:otherwise>
   </j:choose>
   </table>
-  <div align="right" style="margin:1em">
-    <span style="padding-left:1em">
-      <a href="rssAll"><img src="${imagesURL}/atom.gif" border="0" alt="Feed"/> ${%for all releases}</a>
-    </span>
-    <span style="padding-left:1em">
-      <a href="rssFailed"><img src="${imagesURL}/atom.gif" border="0" alt="Feed"/> ${%for failed releases}</a>
-    </span>
+  <div class="jenkins-buttons-row jenkins-buttons-row--invert" style="margin-top: 2rem;">
+    <a href="rssAll" class="yui-button link-button">
+      <span class="leading-icon">
+        <l:svgIcon class="icon-small" viewBox="0 0 16 16"
+              ariaHidden="true"
+              href="${imagesURL}/material-icons/feed.svg#feed"/>
+      </span>
+      ${%Feed for all releases}
+    </a>
+    <a href="rssFailed" class="yui-button link-button">
+      <span class="leading-icon">
+        <l:svgIcon class="icon-small" viewBox="0 0 16 16"
+              ariaHidden="true"
+              href="${imagesURL}/material-icons/feed.svg#feed"/>
+      </span>
+      ${%Feed for failed releases}
+    </a>
   </div>
 </j:jelly>
