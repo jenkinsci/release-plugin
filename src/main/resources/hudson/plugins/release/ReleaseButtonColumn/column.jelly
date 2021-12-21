@@ -23,13 +23,11 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
       <td>
           <j:if test="${job.buildable and job.hasPermission(hudson.plugins.release.ReleaseWrapper.RELEASE_PERMISSION) and it.isReleaseConfigured(job)}">
               <a href="${jobBaseUrl}${job.shortUrl}release">
-                  <img src="${imagesURL}/${subIconSize}/package.png"
-                       title="${%Release}" alt="${%Release}"
-                       border="0"/>
+                  <l:icon class="icon-package icon-md" title="${%Release}" alt="${%Release}"/>
               </a>
           </j:if>
       </td>
