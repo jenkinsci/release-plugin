@@ -33,6 +33,7 @@
 <l:layout title="${%Release}">
 	<st:include it="${it.project}" page="sidepanel.jelly" />
 	<l:main-panel>
+		<j:set var="escapeEntryTitleAndDescription" value="true"/>
 		<f:form method="post" action="submit" name="release-action-form">
 			<j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
 				<f:section title="${%Override build parameters}">
