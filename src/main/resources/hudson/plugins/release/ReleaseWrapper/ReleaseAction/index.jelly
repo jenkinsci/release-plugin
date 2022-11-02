@@ -67,18 +67,26 @@
 			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
 					<script type="text/javascript">
-		         	function useReleaseParameters(releaseNo){
-		         		clearFields();
-		         		releaseParametersArray = $('release_'+releaseNo).getElementsBySelector('tr');
-		         		for(i=0; i&lt;releaseParametersArray.length; i++) {
-		         			if(typeof releaseParametersArray[i].getElementsBySelector('.setting-name')[0] != "undefined"){
-		         				nameElement = releaseParametersArray[i].getElementsBySelector('.setting-name')[0];
-		         				fieldName = nameElement.innerHTML;
-			         			valueElement = nameElement.next().firstDescendant();
-								setFieldValue(fieldName, valueElement);
-		    	     		}
+					function useReleaseParameters(releaseNo){
+						clearFields();
+						releaseParametersArray = $('release_'+releaseNo).getElementsBySelector('div.jenkins-form-item');
+						for(i=0; i&lt;releaseParametersArray.length; i++) {
+							if(typeof releaseParametersArray[i].getElementsBySelector('.setting-main')[0] != "undefined"){
+								fieldElement = releaseParametersArray[i].getElementsBySelector('.setting-main')[0];
+								valueElement = fieldElement.getElementsBySelector("input")[0];
+								nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-form-label')[0];
+								if (typeof nameElement == "undefined") {
+									if (typeof releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0] != "undefined") {
+										nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0].getElementsBySelector('label')[0];
+									}
+								}
+								if (typeof nameElement != "undefined") {
+									fieldName = nameElement.innerHTML;
+									setFieldValue(fieldName, valueElement);
+								}
+							}
 						}
-		         	}
+					}
 		         
 		         	function setFieldValue(pName, pValueElement){
 			         	inputElement = $$('form[action="submit"] input[value="'+pName+'"]')[0];     		
@@ -97,7 +105,7 @@
 		         			if(fieldValue == null){
 		         				fieldValue = false;
 		         			}
-	         				inputElement.next('input').checked=fieldValue;
+							inputElement.next('.jenkins-checkbox').getElementsBySelector('input')[0].checked=fieldValue;
 		    	     	}else if(pValueElement.getAttribute('type') == "password"){
 		    	     		//Password parameters will be ignored
 			         		return;
@@ -115,9 +123,9 @@
 		         	}
 		         	
 		         	function clearFields(){
-		         		inputFields = $$('form[action="submit"] .setting-input');
-		         		inputFields.each(function(item) {
-						  item.clear();
+						inputFields = $$('form[action="submit"] .jenkins-input');
+						inputFields.each(function(item) {
+						item.clear();
 						});
 		         	}
 					</script>
