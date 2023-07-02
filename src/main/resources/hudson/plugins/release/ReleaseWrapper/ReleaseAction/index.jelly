@@ -66,74 +66,11 @@
 		<table width="100%">
 			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
-					<script type="text/javascript">
-					function useReleaseParameters(releaseNo){
-						clearFields();
-						releaseParametersArray = $('release_'+releaseNo).getElementsBySelector('div.jenkins-form-item');
-						for(i=0; i&lt;releaseParametersArray.length; i++) {
-							if(typeof releaseParametersArray[i].getElementsBySelector('.setting-main')[0] != "undefined"){
-								fieldElement = releaseParametersArray[i].getElementsBySelector('.setting-main')[0];
-								valueElement = fieldElement.getElementsBySelector("input")[0];
-								nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-form-label')[0];
-								if (typeof nameElement == "undefined") {
-									if (typeof releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0] != "undefined") {
-										nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0].getElementsBySelector('label')[0];
-									}
-								}
-								if (typeof nameElement != "undefined") {
-									fieldName = nameElement.innerHTML;
-									setFieldValue(fieldName, valueElement);
-								}
-							}
-						}
-					}
-		         
-		         	function setFieldValue(pName, pValueElement){
-			         	inputElement = $$('form[action="submit"] input[value="'+pName+'"]')[0];     		
-		       			if(pValueElement.getAttribute('type') == "text"){
-			    	     	//Text field
-			         		fieldValue = pValueElement.getAttribute('value');
-		         			if(inputElement.next().tagName == "SELECT"){
-		    	     			clearChoice(pName);
-		         				inputElement.next('select').getElementsBySelector('option[value="'+fieldValue+'"]')[0].selected="selected";
-		         			}else{
-				         		inputElement.next('input').value=fieldValue;
-				         	}
-		    	     	}else if(pValueElement.getAttribute('type') == "checkbox"){
-			         		//Boolean parameter
-			         		fieldValue = pValueElement.getAttribute('checked');         		
-		         			if(fieldValue == null){
-		         				fieldValue = false;
-		         			}
-							inputElement.next('.jenkins-checkbox').getElementsBySelector('input')[0].checked=fieldValue;
-		    	     	}else if(pValueElement.getAttribute('type') == "password"){
-		    	     		//Password parameters will be ignored
-			         		return;
-		    	     	}else if(pValueElement.tagName == "A"){
-		    	     		//File and run parameters will be ignored
-		    	     		return;
-		    	     	}
-		         	}
-		         	
-		         	function clearChoice(pName){
-		         		optionsArray = $$('form[action="submit"] input[value="'+pName+'"]')[0].next('select').getElementsBySelector('option');
-		         		optionsArray.each(function(item){
-							item.removeAttribute("selected");         		
-		         		});
-		         	}
-		         	
-		         	function clearFields(){
-						inputFields = $$('form[action="submit"] .jenkins-input');
-						inputFields.each(function(item) {
-						item.clear();
-						});
-		         	}
-					</script>
 					<j:forEach var="b" items="${it.getPreviousReleaseBuilds()}">
 		            <tr>
 						<j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
 		            	<j:if test="${!recentParameters.isEmpty()}">
-		            		<td id="release_${b.number}" tooltip="${%Click to use build parameters}" onclick="javascript:useReleaseParameters(${b.number})">
+		            		<td id="release_${b.number}">
 								<l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
 									<j:forEach var="parameterValue" items="${recentParameters}">
 	                                    <st:include it="${parameterValue}" page="value.jelly" />
