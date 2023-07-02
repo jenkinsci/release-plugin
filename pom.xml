@@ -17,11 +17,10 @@
 
     <properties>
         <jenkins.version>2.387.3</jenkins.version>
-        <java.level>8</java.level>
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/release-plugin.git</connection>
+        <connection>scm:git:https://github.com/jenkinsci/release-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/release-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/release-plugin</url>
         <tag>HEAD</tag>
