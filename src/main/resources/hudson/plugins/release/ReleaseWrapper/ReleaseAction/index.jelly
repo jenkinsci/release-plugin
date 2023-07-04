@@ -70,7 +70,7 @@
 		            <tr>
 						<j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
 		            	<j:if test="${!recentParameters.isEmpty()}">
-		            		<td id="release_${b.number}">
+		            		<td class="release-copy-parameter" id="release_${b.number}" tooltip="${%Click to use build parameters}">
 								<l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
 									<j:forEach var="parameterValue" items="${recentParameters}">
 	                                    <st:include it="${parameterValue}" page="value.jelly" />
@@ -83,6 +83,7 @@
 		        </j:if>
 			</f:section>
 		</table>
+		<script src="${rootURL}/plugin/release/copy-release-parameters.js"/>
     </l:main-panel>
   </l:layout>
 </j:jelly>
