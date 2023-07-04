@@ -3,18 +3,18 @@ document.querySelectorAll('.release-copy-parameter').forEach(element => element.
 function useReleaseParameters(event) {
   const element = event.target
   clearFields();
-  const releaseParametersArray = element.closest('td').getElementsBySelector('div.jenkins-form-item');
+  const releaseParametersArray = element.closest('td').querySelectorAll('div.jenkins-form-item');
   for (let i = 0; i < releaseParametersArray.length; i++) {
-    if (typeof releaseParametersArray[i].getElementsBySelector('.setting-main')[0] != "undefined") {
-      let fieldElement = releaseParametersArray[i].getElementsBySelector('.setting-main')[0];
-      const valueElement = fieldElement.getElementsBySelector("input")[0];
-      let nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-form-label')[0];
-      if (typeof nameElement == "undefined") {
-        if (typeof releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0] != "undefined") {
-          nameElement = releaseParametersArray[i].getElementsBySelector('.jenkins-checkbox')[0].getElementsBySelector('label')[0];
+    if (typeof releaseParametersArray[i].querySelector('.setting-main') != "undefined") {
+      let fieldElement = releaseParametersArray[i].querySelector('.setting-main');
+      const valueElement = fieldElement.querySelector("input");
+      let nameElement = releaseParametersArray[i].querySelector('.jenkins-form-label');
+      if (!nameElement) {
+        if (typeof releaseParametersArray[i].querySelector('.jenkins-checkbox') != "undefined") {
+          nameElement = releaseParametersArray[i].querySelector('.jenkins-checkbox').querySelector('label');
         }
       }
-      if (typeof nameElement != "undefined") {
+      if (nameElement) {
         const fieldName = nameElement.innerHTML;
         setFieldValue(fieldName, valueElement);
       }
@@ -23,16 +23,16 @@ function useReleaseParameters(event) {
 }
 
 function setFieldValue(pName, pValueElement) {
-  let inputElement = $$('form[action="submit"] input[value="' + pName + '"]')[0];
+  let inputElement = document.querySelector('form[action="submit"] input[value="' + pName + '"]');
   if (inputElement) {
     if (pValueElement.getAttribute('type') === "text") {
       //Text field
       const fieldValue = pValueElement.getAttribute('value');
-      if (inputElement.next().tagName === "SELECT") {
+      if (inputElement.nextElementSibling.tagName === "SELECT") {
         clearChoice(pName);
-        inputElement.next('select').getElementsBySelector('option[value="' + fieldValue + '"]')[0].selected = "selected";
+        inputElement.nextElementSibling.querySelector('option[value="' + fieldValue + '"]').selected = "selected";
       } else {
-        inputElement.next('input').value = fieldValue;
+        inputElement.nextElementSibling.value = fieldValue;
       }
     } else if (pValueElement.getAttribute('type') === "checkbox") {
       //Boolean parameter
@@ -40,21 +40,22 @@ function setFieldValue(pName, pValueElement) {
       if (fieldValue == null) {
         fieldValue = false;
       }
-      inputElement.next('.jenkins-checkbox').getElementsBySelector('input')[0].checked = fieldValue;
+      inputElement.nextElementSibling.querySelector('input').checked = fieldValue;
     }
   }
 }
 
 function clearChoice(pName) {
-  const optionsArray = $$('form[action="submit"] input[value="' + pName + '"]')[0].next('select').getElementsBySelector('option');
-  optionsArray.each(function (item) {
+  const result = document.querySelector('form[action="submit"] input[value="' + pName + '"]')
+  const optionsArray = result.nextElementSibling.querySelectorAll('option');
+  optionsArray.forEach(function (item) {
     item.removeAttribute("selected");
   });
 }
 
 function clearFields() {
-  const inputFields = $$('form[action="submit"] .jenkins-input');
-  inputFields.each(function (item) {
+  const inputFields = document.querySelectorAll('form[action="submit"] .jenkins-input');
+  inputFields.forEach(function (item) {
     item.clear();
   });
 }

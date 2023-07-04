@@ -75,7 +75,6 @@
 		            		<td id="release_${b.number}">
 											<div>
 												<h3>#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}</h3>
-
 												<button tooltip="${%Click to use build parameters}"
 																class="jenkins-button jenkins-!-success-color jenkins-copy-button jenkins-!-margin-bottom-1 release-copy-parameter">
 													<span class="jenkins-copy-button__icon"/>
