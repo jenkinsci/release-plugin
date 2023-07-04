@@ -529,7 +529,7 @@ public class ReleaseWrapper extends BuildWrapper implements MatrixAggregatable {
          * {@inheritDoc}
          */
         public String getIconFileName() {
-        	return this.project.isBuildable() && ReleaseWrapper.hasReleasePermission(project) ? "package.png" : null;
+        	return this.project.isBuildable() && ReleaseWrapper.hasReleasePermission(project) ? "symbol-cube-outline plugin-ionicons-api" : null;
         }
 
         /**
