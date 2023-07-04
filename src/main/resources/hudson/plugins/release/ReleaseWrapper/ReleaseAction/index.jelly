@@ -33,6 +33,7 @@
 <l:layout title="${%Release}">
 	<st:include it="${it.project}" page="sidepanel.jelly" />
 	<l:main-panel>
+		<link rel="stylesheet" type="text/css" href="${rootURL}/plugin/release/release.css" />
 		<j:set var="escapeEntryTitleAndDescription" value="true"/>
 		<f:form method="post" action="submit" name="release-action-form">
 			<j:if test="${it.overrideBuildParameters and !it.buildParameterDefinitions.isEmpty()}">
@@ -66,16 +67,24 @@
 		<table width="100%">
 			<f:section title="${%Previous release versions}">
 				<j:if test="${!it.previousReleaseVersions.isEmpty()}">
+					<hr class="release-previous-parameters" />
 					<j:forEach var="b" items="${it.getPreviousReleaseBuilds()}">
 		            <tr>
 						<j:set var="recentParameters" value="${it.getParametersForBuild(b)}" />
 		            	<j:if test="${!recentParameters.isEmpty()}">
 		            		<td id="release_${b.number}">
-								<l:pane title="#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}" width="3">
-									<j:forEach var="parameterValue" items="${recentParameters}">
-	                                    <st:include it="${parameterValue}" page="value.jelly" />
-	                                </j:forEach>
-								</l:pane>
+											<div>
+												<h3>#${b.number} - ${it.getReleaseVersionForBuild(b)} - ${%Parameters}</h3>
+												<button tooltip="${%Click to use build parameters}"
+																class="jenkins-button jenkins-!-success-color jenkins-copy-button jenkins-!-margin-bottom-1 release-copy-parameter">
+													<span class="jenkins-copy-button__icon"/>
+													Use parameters from build ${b.number}
+												</button>
+												<j:forEach var="parameterValue" items="${recentParameters}">
+													<st:include it="${parameterValue}" page="value.jelly"/>
+												</j:forEach>
+												<hr class="release-previous-parameters"/>
+											</div>
 							</td>
 		            	</j:if>
 		            </tr>
@@ -83,6 +92,7 @@
 		        </j:if>
 			</f:section>
 		</table>
+		<script src="${rootURL}/plugin/release/copy-release-parameters.js"/>
     </l:main-panel>
   </l:layout>
 </j:jelly>
