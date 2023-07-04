@@ -27,7 +27,7 @@ function setFieldValue(pName, pValueElement) {
   if (inputElement) {
     if (pValueElement.getAttribute('type') === "text") {
       //Text field
-      const fieldValue = pValueElement.getAttribute('value');
+      let fieldValue = pValueElement.getAttribute('value');
       if (inputElement.nextElementSibling.tagName === "SELECT") {
         clearChoice(pName);
         inputElement.nextElementSibling.querySelector('option[value="' + fieldValue + '"]').selected = "selected";
