@@ -33,17 +33,21 @@ THE SOFTWARE.
         <div id="params"/>
         <script>
             function loadParams() {
-                var div = $$('params');
-                new Ajax.Request('${descriptor.descriptorUrl}/parameters?job=' + encodeURIComponent($$('${jobFieldId}').value) + '&amp;context=' + encodeURIComponent('${descriptor.context}'), {
-                    method : 'get',
-                    onSuccess : function(x) {
-                        div.innerHTML = x.responseText;
-                        Behaviour.applySubtree(div);
-                    },
-                    onFailure : function(x) {
-                        div.innerHTML = "<b>ERROR</b>: Failed to load parameter definitions: " + x.statusText;
-                    }
-                });
+                const div = document.getElementById('params');
+                const parametersTextBox = document.getElementById('${jobFieldId}')
+
+                const url = '${descriptor.descriptorUrl}/parameters?job=' + encodeURIComponent(parametersTextBox.value) + '&amp;context=' + encodeURIComponent('${descriptor.context}')
+                fetch(url)
+                    .then(rsp => {
+                        if (rsp.ok) {
+                            rsp.text().then(responseText => {
+                                div.innerHTML = responseText;
+                                Behaviour.applySubtree(div);
+                            })
+                        } else {
+                            div.innerHTML = "<b>ERROR</b>: Failed to load parameter definitions: " + rsp.statusText;
+                        }
+                    })
             }
         </script>
     </f:entry>
