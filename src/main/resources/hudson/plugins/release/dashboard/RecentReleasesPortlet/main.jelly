@@ -61,7 +61,7 @@ THE SOFTWARE.
 	        </td>
 	        <td>
 	          <a href="${b.url}console">
-	            <img src="${imagesURL}/${subIconSize}/terminal.gif" title="${%Console output}" alt="${%Console output}" border="0" />
+				<l:icon class="icon-sm" src="symbol-terminal" tooltip="${%Console output}" />
 	          </a>
 	        </td>
 	      </tr>
@@ -72,17 +72,13 @@ THE SOFTWARE.
   <div class="jenkins-buttons-row jenkins-buttons-row--invert" style="margin-top: 2rem;">
     <a href="rssAll" class="yui-button link-button">
       <span class="leading-icon">
-        <l:svgIcon class="icon-small" viewBox="0 0 16 16"
-              ariaHidden="true"
-              href="${imagesURL}/material-icons/feed.svg#feed"/>
+		<l:icon class="icon-sm" src="symbol-rss" />
       </span>
       ${%Feed for all releases}
     </a>
     <a href="rssFailed" class="yui-button link-button">
       <span class="leading-icon">
-        <l:svgIcon class="icon-small" viewBox="0 0 16 16"
-              ariaHidden="true"
-              href="${imagesURL}/material-icons/feed.svg#feed"/>
+		  <l:icon class="icon-sm" src="symbol-rss" />
       </span>
       ${%Feed for failed releases}
     </a>
