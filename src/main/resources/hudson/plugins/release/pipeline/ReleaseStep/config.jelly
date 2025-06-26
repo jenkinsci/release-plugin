@@ -25,30 +25,16 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
+    <st:adjunct includes="hudson.plugins.release.pipeline.ReleaseStep.load-params"/>
     <j:set var="jobFieldId" value="${h.generateId()}"/>
+    <span
+            class="release-params-data"
+            data-descriptor-url="${descriptor.descriptorUrl}"
+            data-context="${descriptor.context}"/>
     <f:entry field="job" title="${%Job to Release}">
-        <f:textbox onblur="loadParams()" id="${jobFieldId}"/>
+        <f:textbox clazz="release-load-params" id="${jobFieldId}"/>
     </f:entry>
     <f:entry title="${%Parameters}">
         <div id="params"/>
-        <script>
-            function loadParams() {
-                const div = document.getElementById('params');
-                const parametersTextBox = document.getElementById('${jobFieldId}')
-
-                const url = '${descriptor.descriptorUrl}/parameters?job=' + encodeURIComponent(parametersTextBox.value) + '&amp;context=' + encodeURIComponent('${descriptor.context}')
-                fetch(url)
-                    .then(rsp => {
-                        if (rsp.ok) {
-                            rsp.text().then(responseText => {
-                                div.innerHTML = responseText;
-                                Behaviour.applySubtree(div);
-                            })
-                        } else {
-                            div.innerHTML = "<b>ERROR</b>: Failed to load parameter definitions: " + rsp.statusText;
-                        }
-                    })
-            }
-        </script>
     </f:entry>
 </j:jelly>
