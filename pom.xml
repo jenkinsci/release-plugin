@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.66</version>
+        <version>6.2211.v27f680c93c53</version>
     </parent>
     <artifactId>release</artifactId>
     <packaging>hpi</packaging>
@@ -16,7 +16,9 @@
     <url>https://github.com/jenkinsci/release-plugin</url>
 
     <properties>
-        <jenkins.version>2.387.3</jenkins.version>
+        <jenkins.baseline>2.479</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+        <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
     </properties>
 
     <scm>
@@ -30,10 +32,17 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.387.x</artifactId>
-                <version>2133.v2e6c00fe4d61</version>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
+                <version>5054.v620b_5d2b_d5e6</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <!-- maven-plugin pulls javax.annotation-api 1.2 and 1.3.2 down different
+                 paths, which trips RequireUpperBoundDeps. Pin the newer one. -->
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>javax.annotation-api</artifactId>
+                <version>1.3.2</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
@@ -45,13 +54,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-lang3-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>script-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.main</groupId>
             <artifactId>maven-plugin</artifactId>
-            <version>3.15.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
@@ -79,7 +91,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>promoted-builds</artifactId>
-            <version>3.10</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -102,7 +113,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>config-file-provider</artifactId>
-            <version>3.8.1</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -134,7 +144,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>ant</artifactId>
-            <version>1.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -26,7 +26,7 @@ package hudson.plugins.release;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.TopLevelItem;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 final class ViewJobFilterUtils {
 

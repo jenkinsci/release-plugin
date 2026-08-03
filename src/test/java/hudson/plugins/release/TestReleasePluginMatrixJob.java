@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 /**
@@ -37,7 +37,7 @@ public class TestReleasePluginMatrixJob {
      * @throws Exception
      */
     @Test
-    @Bug(31159)
+    @Issue("JENKINS-31159")
     public void testMatrixStepsSubmission() throws Exception {
         // prepare wrapper with some randomly chosen build steps
         final ReleaseWrapper originalWrapper = new ReleaseWrapper();
