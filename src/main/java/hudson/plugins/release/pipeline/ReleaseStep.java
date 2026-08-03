@@ -38,7 +38,7 @@ import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
