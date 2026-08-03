@@ -36,6 +36,9 @@ public class ReleaseStepTest {
         WorkflowJob us = j.jenkins.createProject(WorkflowJob.class, "us");
         us.setDefinition(new CpsFlowDefinition("release 'ds'\n echo \"release's done\"", true));
         j.assertLogContains("release's done", j.buildAndAssertSuccess(us));
+        // the upstream build returns as soon as the release step is done, so the downstream
+        // build can still be running here and would refuse to be deleted
+        j.waitUntilNoActivity();
         ds.getBuildByNumber(1).delete();
     }
 
